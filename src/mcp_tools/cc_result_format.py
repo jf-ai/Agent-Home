@@ -151,9 +151,15 @@ def _format_bash(
     A timeout does not kill the command: serve moves it to a background task
     (`timedOutAfterMs`, `backgroundOutputPath`) with stdout/stderr empty. The
     result says so and carries the output so far.
+
+    A `run_in_background` command returns at once with the same task fields
+    but no `timedOutAfterMs`. The result gives the output file to read later;
+    nothing reports when it finishes.
     """
     if "timedOutAfterMs" in payload:
         return _format_bash_timeout(payload, background_output)
+    if "backgroundTaskId" in payload:
+        return _format_bash_background(payload)
     combined = payload.get("stdout", "") + payload.get("stderr", "")
     if persisted_output is not None:
         combined = persisted_output.rstrip("\n")
@@ -179,11 +185,24 @@ def _format_bash(
     return combined if combined else "(Bash completed with no output)"
 
 
+def _format_bash_background(payload: dict) -> str:
+    path = payload.get("backgroundOutputPath")
+    head = f"Command running in the background (task {payload['backgroundTaskId']})."
+    if not path:
+        return f"{head} [Its output file was not reported.]"
+    return (
+        f"{head} Its output is being written to {path}; read that file in later "
+        "calls. Nothing reports when it finishes."
+    )
+
+
 def _format_bash_timeout(payload: dict, background_output: str | None) -> str:
     head = (
         f"Command timed out after {payload['timedOutAfterMs']} ms and is still "
         "running in the background."
     )
+    if payload.get("backgroundOutputPath"):
+        head += f" Its output is being written to {payload['backgroundOutputPath']}."
     if background_output is None:
         return f"{head}\n[Output so far could not be retrieved.]"
     output = background_output.rstrip("\n")
