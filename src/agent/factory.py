@@ -46,6 +46,9 @@ from agent.tools import get_tools_for_agent
 LOCK_TIMEOUT_SECONDS: int = 60
 LOCK_TIMEOUT_FAST: int = 2
 _MCP_FILESYSTEM_URL = "http://host.docker.internal:8080/mcp"
+# Per-request read timeout for the filesystem MCP server. Must exceed fs_proxy's
+# 600 s foreground Bash cap (pydantic-ai's 300 s default cut long commands off).
+_MCP_FILESYSTEM_READ_TIMEOUT_SECONDS: float = 660
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +138,7 @@ def _construct_toolsets(toolset_names: list[str]) -> list:
     toolsets = []
     for name in toolset_names:
         if name == "mcp_filesystem":
-            toolsets.append(MCPToolset(_MCP_FILESYSTEM_URL))
+            toolsets.append(MCPToolset(_MCP_FILESYSTEM_URL, read_timeout=_MCP_FILESYSTEM_READ_TIMEOUT_SECONDS))
         else:
             logger.warning("Unknown toolset name %r — skipping. Check agent config for typos.", name)
     return toolsets
