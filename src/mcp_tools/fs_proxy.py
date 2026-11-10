@@ -97,13 +97,50 @@ def _read_persisted_output(path: str) -> str | None:
         return None
 
 
+def _pids_holding(path: str) -> list[int]:
+    """PIDs of the processes that have `path` open, found through /proc/<pid>/fd."""
+    pids = []
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            fds = os.listdir(f"/proc/{entry}/fd")
+        except OSError:  # exited, or not ours to see
+            continue
+        for fd in fds:
+            try:
+                target = os.readlink(f"/proc/{entry}/fd/{fd}")
+            except OSError:  # fd closed meanwhile
+                continue
+            if target == path:
+                pids.append(int(entry))
+                break
+    return pids
+
+
+def _parent_and_session(pid: int) -> tuple[int, int] | None:
+    """(parent PID, session ID) of a process from /proc/<pid>/stat, or None if it's gone."""
+    try:
+        with open(f"/proc/{pid}/stat") as f:
+            stat = f.read()
+    except OSError:
+        return None
+    # Format: "pid (command name) state ppid pgrp session ...". The name can
+    # contain spaces and ")", so split after the last ")".
+    after_name = stat[stat.rindex(")") + 1:].split()
+    _state, parent, _process_group, session = after_name[:4]
+    return int(parent), int(session)
+
+
 def _task_pid(output_path: str) -> int | None:
     """PID of the backgrounded Bash command writing to `output_path`, or None.
 
-    Serve doesn't report it. Each background task is a shell that leads its own
-    session, child of serve, holding its output file open; its children hold
-    the file too, but their parent is a holder. None if no process has the file
-    open (the command already finished) or the answer is ambiguous.
+    Serve doesn't report it. Each background task is a shell that serve starts
+    in a session of its own, with the output file as its stdout; the commands
+    it runs inherit the file. So among the processes holding the file, the
+    task is the one that leads its own session and whose parent (serve) isn't
+    a holder. None if no process has the file open (the command already
+    finished) or more than one fits.
 
     TODO: MCP's async tasks may be the standard replacement for backgrounding
     plus a PID. FastMCP (3.4.7) supports them (`Tool.from_function(...,
@@ -111,27 +148,16 @@ def _task_pid(output_path: str) -> int | None:
     result. Worth checking whether Agent Home's MCP client (pydantic-ai)
     supports them, and how Bash could be wrapped as a task-capable tool.
     """
-    path = os.path.realpath(output_path)
-    holders: dict[int, tuple[int, int]] = {}  # pid -> (ppid, session id)
-    for entry in os.listdir("/proc"):
-        if not entry.isdigit():
-            continue
-        try:
-            fd_dir = f"/proc/{entry}/fd"
-            if not any(os.readlink(f"{fd_dir}/{fd}") == path for fd in os.listdir(fd_dir)):
-                continue
-            with open(f"/proc/{entry}/stat") as f:
-                stat = f.read()
-        except OSError:  # exited, or not ours to see
-            continue
-        # Fields after the parenthesised command name: state ppid pgrp session ...
-        fields = stat[stat.rindex(")") + 2:].split()
-        holders[int(entry)] = (int(fields[1]), int(fields[3]))
-    roots = [
-        pid for pid, (ppid, sid) in holders.items()
-        if sid == pid and ppid not in holders
+    holders = {}
+    for pid in _pids_holding(os.path.realpath(output_path)):
+        info = _parent_and_session(pid)
+        if info is not None:
+            holders[pid] = info
+    tasks = [
+        pid for pid, (parent, session) in holders.items()
+        if session == pid and parent not in holders
     ]
-    return roots[0] if len(roots) == 1 else None
+    return tasks[0] if len(tasks) == 1 else None
 
 
 class _CCResultFormatMiddleware(Middleware):
