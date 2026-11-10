@@ -237,12 +237,12 @@ class TestBashTimeout:
         result = format_cc_tool_result("Bash", _timed_out(), False, None, "1\n2\n3\n")
         assert result == (
             "Command timed out after 3000 ms and is still running in the background."
-            " Output so far:\n1\n2\n3"
+            " Its output is being written to /t/tasks/a.output. Output so far:\n1\n2\n3"
         )
 
     def test_no_output_so_far(self):
         result = format_cc_tool_result("Bash", _timed_out(), False, None, "")
-        assert result.endswith("background. No output so far.")
+        assert result.endswith("/t/tasks/a.output. No output so far.")
 
     def test_unreadable_output_still_reports_timeout(self):
         result = format_cc_tool_result("Bash", _timed_out(), False, None, None)
@@ -255,6 +255,34 @@ class TestBashTimeout:
         assert background_output_path("Read", _timed_out(), False) is None
         assert background_output_path("Bash", _timed_out(), True) is None
         assert background_output_path("Bash", json.dumps({"stdout": ""}), False) is None
+
+
+def _backgrounded(**extra) -> str:
+    """Serve's result for a run_in_background command (CC 2.1.300)."""
+    return json.dumps({
+        "stdout": "", "stderr": "", "interrupted": False, "isImage": False,
+        "noOutputExpected": False, "backgroundTaskId": "b7ai59sup",
+        "backgroundOutputPath": "/t/tasks/b7ai59sup.output", **extra,
+    })
+
+
+class TestBashRunInBackground:
+    def test_reports_task_and_output_file(self):
+        result = format_cc_tool_result("Bash", _backgrounded(), False, None, "")
+        assert result == (
+            "Command running in the background (task b7ai59sup). Its output is being written to "
+            "/t/tasks/b7ai59sup.output; read that file in later calls. Nothing reports when it finishes."
+        )
+
+    def test_not_reported_as_no_output(self):
+        result = format_cc_tool_result("Bash", _backgrounded(), False, None, None)
+        assert "no output" not in result
+
+    def test_missing_path_says_so(self):
+        payload = json.loads(_backgrounded())
+        del payload["backgroundOutputPath"]
+        result = format_cc_tool_result("Bash", json.dumps(payload), False)
+        assert result.endswith("[Its output file was not reported.]")
 
 
 class TestPassThrough:
