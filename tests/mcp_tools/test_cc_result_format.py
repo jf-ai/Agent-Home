@@ -233,15 +233,20 @@ def _timed_out(ms: int = 3000) -> str:
 
 
 class TestBashTimeout:
-    def test_reports_timeout_with_output_so_far(self):
-        result = format_cc_tool_result("Bash", _timed_out(), False, None, "1\n2\n3\n")
+    def test_reports_timeout_with_pid_and_output_so_far(self):
+        result = format_cc_tool_result("Bash", _timed_out(), False, None, "1\n2\n3\n", 4242)
         assert result == (
             "Command timed out after 3000 ms and is still running in the background."
-            " Its output is being written to /t/tasks/a.output. Output so far:\n1\n2\n3"
+            " Its PID is 4242. Its output is being written to /t/tasks/a.output."
+            " Output so far:\n1\n2\n3"
         )
 
+    def test_pid_not_found(self):
+        result = format_cc_tool_result("Bash", _timed_out(), False, None, "1\n", None)
+        assert "[Its PID could not be found; it may already have finished.]" in result
+
     def test_no_output_so_far(self):
-        result = format_cc_tool_result("Bash", _timed_out(), False, None, "")
+        result = format_cc_tool_result("Bash", _timed_out(), False, None, "", 4242)
         assert result.endswith("/t/tasks/a.output. No output so far.")
 
     def test_unreadable_output_still_reports_timeout(self):
@@ -267,12 +272,16 @@ def _backgrounded(**extra) -> str:
 
 
 class TestBashRunInBackground:
-    def test_reports_task_and_output_file(self):
-        result = format_cc_tool_result("Bash", _backgrounded(), False, None, "")
+    def test_reports_pid_and_output_file(self):
+        result = format_cc_tool_result("Bash", _backgrounded(), False, None, "", 4242)
         assert result == (
-            "Command running in the background (task b7ai59sup). Its output is being written to "
-            "/t/tasks/b7ai59sup.output; read that file in later calls. Nothing reports when it finishes."
+            "Command running in the background. Its PID is 4242. Its output is being written to "
+            "/t/tasks/b7ai59sup.output."
         )
+
+    def test_pid_not_found(self):
+        result = format_cc_tool_result("Bash", _backgrounded(), False, None, "", None)
+        assert "[Its PID could not be found; it may already have finished.]" in result
 
     def test_not_reported_as_no_output(self):
         result = format_cc_tool_result("Bash", _backgrounded(), False, None, None)

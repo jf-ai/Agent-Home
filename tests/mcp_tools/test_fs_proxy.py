@@ -1,5 +1,9 @@
 """Tests for fs_proxy environment passthrough functionality."""
 import json
+import os
+import signal
+import subprocess
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +12,7 @@ from mcp_tools.fs_proxy import (
     _build_passthrough_env,
     _CCResultFormatMiddleware,
     _read_persisted_output,
+    _task_pid,
     create_fs_proxy,
 )
 
@@ -171,3 +176,60 @@ class TestTimedOutBash:
         text = await _run_bash_middleware(self._payload(tmp_path / "gone.output"))
         assert text.startswith("Command timed out after 3000 ms")
         assert "could not be retrieved" in text
+
+    async def test_reports_pid_of_running_command(self, tmp_path):
+        out = tmp_path / "t.output"
+        proc = _start_task("sleep 30; echo done", out)
+        try:
+            text = await _run_bash_middleware(self._payload(out))
+        finally:
+            _kill_task(proc)
+        assert f"Its PID is {proc.pid}." in text
+
+
+def _start_task(command: str, out) -> subprocess.Popen:
+    """A command writing to `out` in its own session, as serve's background tasks run."""
+    with open(out, "wb") as f:
+        return subprocess.Popen(
+            ["sh", "-c", command], stdout=f, stderr=f, start_new_session=True
+        )
+
+
+def _kill_task(proc: subprocess.Popen) -> None:
+    os.killpg(proc.pid, signal.SIGKILL)
+    proc.wait()
+
+
+def _wait_closed(out, timeout: float = 5.0) -> None:
+    """proc.wait() reaps only sh; its killed children may close the file a moment later."""
+    deadline = time.monotonic() + timeout
+    while _task_pid(str(out)) is not None and time.monotonic() < deadline:
+        time.sleep(0.05)
+
+
+class TestTaskPid:
+    """Finding a backgrounded command's PID from the processes holding its output file."""
+
+    def test_finds_the_session_leading_shell_not_its_child(self, tmp_path):
+        out = tmp_path / "t.output"
+        proc = _start_task("sleep 30; echo done", out)  # sh stays, with sleep as its child
+        try:
+            assert _task_pid(str(out)) == proc.pid
+        finally:
+            _kill_task(proc)
+
+    def test_none_once_finished(self, tmp_path):
+        out = tmp_path / "t.output"
+        proc = _start_task("echo hi", out)
+        proc.wait()
+        _wait_closed(out)
+        assert _task_pid(str(out)) is None
+
+    def test_none_for_a_holder_not_leading_its_session(self, tmp_path):
+        """A process that merely has the file open (here, the test itself) isn't a task."""
+        out = tmp_path / "t.output"
+        with open(out, "wb"):
+            assert _task_pid(str(out)) is None
+
+    def test_none_for_a_missing_file(self, tmp_path):
+        assert _task_pid(str(tmp_path / "gone.output")) is None

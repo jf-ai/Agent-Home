@@ -58,12 +58,14 @@ def format_cc_tool_result(
     is_error: bool,
     persisted_output: str | None = None,
     background_output: str | None = None,
+    background_pid: int | None = None,
 ) -> str:
     """Dispatch a serve-mode tool result to its native-format string.
 
     `persisted_output` is the contents of the file at `persisted_output_path`,
     or None if there was none or it couldn't be read. `background_output` is
-    the same for `background_output_path`.
+    the same for `background_output_path`. `background_pid` is the PID of the
+    backgrounded command, or None if it couldn't be found.
     """
     if is_error:
         return _format_error(tool_name, text)
@@ -77,7 +79,7 @@ def format_cc_tool_result(
     if formatter is None:
         return text
     if tool_name == "Bash":
-        return _format_bash(payload, persisted_output, background_output)
+        return _format_bash(payload, persisted_output, background_output, background_pid)
     return formatter(payload)
 
 
@@ -139,6 +141,7 @@ def _format_bash(
     payload: dict,
     persisted_output: str | None = None,
     background_output: str | None = None,
+    background_pid: int | None = None,
 ) -> str:
     """stdout then stderr as plain text, trailing newline trimmed.
 
@@ -153,13 +156,14 @@ def _format_bash(
     result says so and carries the output so far.
 
     A `run_in_background` command returns at once with the same task fields
-    but no `timedOutAfterMs`. The result gives the output file to read later;
-    nothing reports when it finishes.
+    but no `timedOutAfterMs`. Nothing reports when either finishes, so both
+    results give the command's PID (found by the proxy; serve doesn't report
+    it) for the agent to wait on or kill.
     """
     if "timedOutAfterMs" in payload:
-        return _format_bash_timeout(payload, background_output)
+        return _format_bash_timeout(payload, background_output, background_pid)
     if "backgroundTaskId" in payload:
-        return _format_bash_background(payload)
+        return _format_bash_background(payload, background_pid)
     combined = payload.get("stdout", "") + payload.get("stderr", "")
     if persisted_output is not None:
         combined = persisted_output.rstrip("\n")
@@ -185,21 +189,26 @@ def _format_bash(
     return combined if combined else "(Bash completed with no output)"
 
 
-def _format_bash_background(payload: dict) -> str:
+def _pid_note(pid: int | None) -> str:
+    if pid is None:
+        return " [Its PID could not be found; it may already have finished.]"
+    return f" Its PID is {pid}."
+
+
+def _format_bash_background(payload: dict, pid: int | None) -> str:
     path = payload.get("backgroundOutputPath")
-    head = f"Command running in the background (task {payload['backgroundTaskId']})."
+    head = "Command running in the background." + _pid_note(pid)
     if not path:
         return f"{head} [Its output file was not reported.]"
-    return (
-        f"{head} Its output is being written to {path}; read that file in later "
-        "calls. Nothing reports when it finishes."
-    )
+    return f"{head} Its output is being written to {path}."
 
 
-def _format_bash_timeout(payload: dict, background_output: str | None) -> str:
+def _format_bash_timeout(
+    payload: dict, background_output: str | None, pid: int | None
+) -> str:
     head = (
         f"Command timed out after {payload['timedOutAfterMs']} ms and is still "
-        "running in the background."
+        "running in the background." + _pid_note(pid)
     )
     if payload.get("backgroundOutputPath"):
         head += f" Its output is being written to {payload['backgroundOutputPath']}."

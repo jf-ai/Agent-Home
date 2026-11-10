@@ -52,9 +52,14 @@ def _bash_description() -> str:
     git_path = os.environ.get("GIT_PATH", "/home/gossf/git")
     return (
         "Execute a shell command; synchronous — returns when the command completes or the timeout is hit. "
+        "timeout is in ms: default 2 minutes, max 10 minutes. "
+        "A command that hits its timeout keeps running in the background, except one starting with `sleep`, "
+        "which is killed; run_in_background starts it there at once. Either way the result gives its PID "
+        "and output file. Wait for it with `timeout 235 tail --pid=PID -f /dev/null` (exit 0: finished, "
+        "124: still running); `wait PID` fails, as it isn't this shell's child. `kill -- -PID` stops it "
+        "and everything it started. No exit status is recorded for backgrounded tasks, so if you'll need it, "
+        "end the command with `; echo \"[exit $?]\"`. "
         f"The working directory resets to {git_path} after each call — relative paths resolve from there, absolute paths work anywhere. "
-        "Foreground commands are capped (~10 minutes); for longer-running or background work, start the job "
-        "detached (nohup sh -c '...' >log 2>&1 &) and poll the log with later calls. "
         "Prefer absolute paths. "
         "find/grep are shell functions backed by the claude executable — plain output, no structured search params."
     )
@@ -90,6 +95,43 @@ def _read_persisted_output(path: str) -> str | None:
         return None
 
 
+def _task_pid(output_path: str) -> int | None:
+    """PID of the backgrounded Bash command writing to `output_path`, or None.
+
+    Serve doesn't report it. Each background task is a shell that leads its own
+    session, child of serve, holding its output file open; its children hold
+    the file too, but their parent is a holder. None if no process has the file
+    open (the command already finished) or the answer is ambiguous.
+
+    TODO: MCP's async tasks may be the standard replacement for backgrounding
+    plus a PID. FastMCP (3.4.7) supports them (`Tool.from_function(...,
+    task=...)`): the client starts a long tool call and polls it for the
+    result. Worth checking whether Agent Home's MCP client (pydantic-ai)
+    supports them, and how Bash could be wrapped as a task-capable tool.
+    """
+    path = os.path.realpath(output_path)
+    holders: dict[int, tuple[int, int]] = {}  # pid -> (ppid, session id)
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            fd_dir = f"/proc/{entry}/fd"
+            if not any(os.readlink(f"{fd_dir}/{fd}") == path for fd in os.listdir(fd_dir)):
+                continue
+            with open(f"/proc/{entry}/stat") as f:
+                stat = f.read()
+        except OSError:  # exited, or not ours to see
+            continue
+        # Fields after the parenthesised command name: state ppid pgrp session ...
+        fields = stat[stat.rindex(")") + 2:].split()
+        holders[int(entry)] = (int(fields[1]), int(fields[3]))
+    roots = [
+        pid for pid, (ppid, sid) in holders.items()
+        if sid == pid and ppid not in holders
+    ]
+    return roots[0] if len(roots) == 1 else None
+
+
 class _CCResultFormatMiddleware(Middleware):
     """Rewrite claude mcp serve's JSON tool results into CC-native text.
 
@@ -102,7 +144,8 @@ class _CCResultFormatMiddleware(Middleware):
     to a file on this container's filesystem; it is read here and handed to
     the formatter, which stays I/O-free. The agent-side ToolOutputLimits
     capability then spills it like any other large tool result. A timed-out
-    command's output-so-far file is read the same way.
+    command's output-so-far file is read the same way, and a backgrounded
+    command's PID is looked up for the result.
     """
 
     async def on_call_tool(
@@ -128,8 +171,12 @@ class _CCResultFormatMiddleware(Middleware):
                 await asyncio.to_thread(_read_persisted_output, background_path)
                 if background_path else None
             )
+            background_pid = (
+                await asyncio.to_thread(_task_pid, background_path)
+                if background_path else None
+            )
             formatted = format_cc_tool_result(
-                name, text, result.is_error, persisted, background
+                name, text, result.is_error, persisted, background, background_pid
             )
             if formatted != text:
                 content[0].text = formatted
