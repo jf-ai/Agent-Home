@@ -783,7 +783,7 @@ class TestToolsetConditionalAttachment:
         factory = AgentFactory(agent_record_with_mcp.id, agent_app_state_reg, session)
         
         async with factory.build_agent_and_deps() as (agent, deps):
-            self.mock_mcp.assert_called_once_with("http://host.docker.internal:8080/mcp", read_timeout=660)
+            self.mock_mcp.assert_called_once_with("http://host.docker.internal:8080/mcp", read_timeout=660, tool_error_behavior="failed")
             assert len(agent._user_toolsets) == 1, "One toolset should be attached"
             # The toolset is the return value of our mocked MCPToolset constructor
             assert agent._user_toolsets[0] is self.mock_mcp.return_value
