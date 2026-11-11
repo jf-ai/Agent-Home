@@ -54,6 +54,11 @@ _DEFAULT_MCP_FILESYSTEM_URL = "http://host.docker.internal:8080/mcp"
 # Per-request read timeout for the filesystem MCP server. Must exceed fs_proxy's
 # 600 s foreground Bash cap (pydantic-ai's 300 s default cut long commands off).
 _MCP_FILESYSTEM_READ_TIMEOUT_SECONDS: float = 660
+# A failed command (non-zero exit) comes back from Claude Code as isError. pydantic-ai's default,
+# 'retry', turns that into ModelRetry: it adds "Fix the errors and try again." and spends the tool's
+# retry budget, so a few failing commands in a row kill the run. 'failed' returns it as an ordinary
+# failed tool result; the request limit still bounds runaway loops.
+_MCP_FILESYSTEM_TOOL_ERROR_BEHAVIOR = "failed"
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +154,11 @@ def _construct_toolsets(toolset_names: list[str], mcp_filesystem_url: str | None
     toolsets = []
     for name in toolset_names:
         if name == "mcp_filesystem":
-            toolsets.append(MCPToolset(mcp_filesystem_url or _DEFAULT_MCP_FILESYSTEM_URL, read_timeout=_MCP_FILESYSTEM_READ_TIMEOUT_SECONDS))
+            toolsets.append(MCPToolset(
+                mcp_filesystem_url or _DEFAULT_MCP_FILESYSTEM_URL,
+                read_timeout=_MCP_FILESYSTEM_READ_TIMEOUT_SECONDS,
+                tool_error_behavior=_MCP_FILESYSTEM_TOOL_ERROR_BEHAVIOR,
+            ))
         else:
             logger.warning("Unknown toolset name %r — skipping. Check agent config for typos.", name)
     return toolsets
