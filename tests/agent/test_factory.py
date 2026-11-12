@@ -602,6 +602,18 @@ class TestBuildModelSettings:
         settings = _build_model_settings(self._config("anthropic:claude-haiku-4-5", thinking_mode=False))
         assert "anthropic_thinking" not in settings
 
+    @pytest.mark.parametrize("model_name", ["anthropic:claude-sonnet-5-5", "anthropic:claude-opus-5-5"])
+    def test_anthropic_adaptive_thinking_is_summarized(self, model_name: str):
+        """Adaptive-thinking models → display 'summarized', or their thinking text comes back empty.
+
+        The unified 'thinking' still passes through, so pydantic-ai keeps mapping it to effort.
+        """
+        settings = _build_model_settings(self._config(model_name, thinking_mode="high"))
+        assert settings.get("anthropic_thinking") == {"type": "adaptive", "display": "summarized"}
+        assert settings.get("thinking") == "high"
+        off = _build_model_settings(self._config(model_name, thinking_mode=False))
+        assert "anthropic_thinking" not in off
+
     def test_non_anthropic_no_cache_flags(self):
         """Non-Anthropic providers → no Anthropic-specific cache fields."""
         for model_name in ("together:meta-llama/Llama-3.3-70B-Instruct-Turbo", "openai-chat:gpt-4o"):

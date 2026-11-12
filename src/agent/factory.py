@@ -109,14 +109,19 @@ def _build_model_settings(config: "AgentConfig") -> ModelSettings:
     )
 
     if isinstance(m, AnthropicModel):
-        # No thinking special-case needed: the common 'thinking' setting covers
-        # Anthropic natively (pydantic-ai maps it to the model's thinking config).
+        # The common 'thinking' setting covers Anthropic natively (pydantic-ai maps it to the
+        # model's thinking config, and its effort level to output_config.effort).
         settings = AnthropicModelSettings(
             **settings,
             anthropic_cache_instructions=True,
             anthropic_cache_tool_definitions=True,
             anthropic_cache_messages=True,
         )
+        # Adaptive-thinking models (Claude 5 family) default to display "omitted", which returns
+        # thinking blocks with empty text. "summarized" makes the reasoning readable; it changes
+        # visibility only, not how much the model thinks. Effort still comes from 'thinking'.
+        if config.thinking_mode and m.profile.get("anthropic_supports_adaptive_thinking", False):
+            settings["anthropic_thinking"] = {"type": "adaptive", "display": "summarized"}
     elif isinstance(m, OpenRouterModel):
         # Default routing uses cache-adjusted "effective price" — smarter than raw list price.
         # Only override with provider.order when we need explicit provider control.
