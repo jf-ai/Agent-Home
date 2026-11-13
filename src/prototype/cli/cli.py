@@ -114,6 +114,13 @@ def default_agent_config() -> dict:
 
 # --- Output Helpers ---
 
+def style(text: str, code: str) -> str:
+    """Wrap text in an ANSI SGR code, only when writing to a terminal and NO_COLOR is unset."""
+    if not sys.stdout.isatty() or os.environ.get("NO_COLOR"):
+        return text
+    return f"\033[{code}m{text}\033[0m"
+
+
 def output(state: CLIState, message: str, end: str = "\n") -> None:
     """Print output, respecting headless mode."""
     print(message, end=end, flush=True)
@@ -716,15 +723,17 @@ async def cmd_history(state: CLIState, client: httpx.AsyncClient, args: list[str
                     kind = inner.get("kind") or msg.get("kind", "unknown")
                     parts = inner.get("parts") or msg.get("parts", [])
                     role = "User" if kind == "request" else "Assistant"
-                    output(state, f"**{role}:**")
+                    role_color = "1;92" if kind == "request" else "1;95"  # bold bright green / magenta
+                    ids = f"[seq {msg.get('seq_id')} | {msg.get('id')}]"
+                    output(state, f"{style(f'**{role}:**', role_color)} {style(ids, '2')}")
 
                     has_thinking = any(p.get("part_kind") == "thinking" for p in parts)
                     for part in parts:
                         part_kind = part.get("part_kind", "")
                         if part_kind == "thinking":
-                            output(state, "[Thinking]")
+                            output(state, style("[Thinking]", "1;36"))
                             output(state, part.get("content", ""))
-                            output(state, "─" * 40)
+                            output(state, style("─" * 40, "1;36"))
                         elif part_kind == "text":
                             if has_thinking:
                                 output(state, "")  # breathing room after separator
