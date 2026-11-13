@@ -712,7 +712,7 @@ async def cmd_history(state: CLIState, client: httpx.AsyncClient, args: list[str
             if not messages:
                 output(state, "No messages yet.")
             else:
-                output(state, f"\n--- Message History ({len(messages)} messages, agent {state.active_agent_id}) ---\n")
+                output(state, f"\n--- Message History ({len(messages)} messages) ---\n")
                 for msg in messages:
                     # Endpoint may return parsed message dicts or raw DB records
                     # where parts are JSON-encoded in a "content" field
