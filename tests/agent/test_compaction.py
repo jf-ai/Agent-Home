@@ -2,9 +2,13 @@
 
 Tests is_compaction_needed and compact functions.
 
-compact(deps) derives total_tokens from the last ModelResponse in context.
-It estimates system prompt tokens from char count, calculates message tokens,
-and advances context_window_start to retain the target fraction of current message tokens.
+compact(deps) retains compaction_target_fraction of in-context messages BY COUNT
+(never fewer than 4) and advances context_window_start. Triggering (in the
+runner) uses the provider-reported total_tokens; compact() itself needs no
+token data — compact used to use token data in its calculations but we discovered
+the calc was circular and we were really just evicting a fraction of msg count not msg
+tokens. These tests were not updated to represent the actual semantics as they'll be
+discarded later anyway.
 """
 import logging
 import pytest
@@ -73,9 +77,9 @@ async def _make_agent_with_messages(
 ) -> dict:
     """Factory for creating an agent with N alternating request/response messages.
 
-    System prompt is set to a string of specified char length (for token estimation testing).
-    Pass total_tokens to set usage on the last response, simulating real API data that
-    compact() reads when calculating the compaction target.
+    System prompt is set to a string of specified char length. Pass total_tokens to
+    set usage on the last response — realistic data the runner trigger would use;
+    compact() itself no longer reads it.
     Returns dict with agent, messages, deps for test access.
     """
     if config is None:
@@ -133,6 +137,8 @@ class CompactTestBase(DBTestBase):
     - System prompt tokens ≈ len(compiled_system_prompt) / 4
     - Message tokens = total_tokens - system_prompt_tokens
     - Avg tokens per message = message_tokens / message_count
+
+    (Old understanding)
     """
 
     async def _setup(
@@ -144,9 +150,9 @@ class CompactTestBase(DBTestBase):
         total_tokens: int | None,
     ):
         """Set up test scenario with specified compaction parameters.
-        
-        total_tokens is stored on the last ModelResponse record so compact() can
-        derive it without relying on a caller-supplied value.
+
+        total_tokens populates realistic usage data on the last response (compact()
+        no longer reads it — retained so the scenario matches production records).
         """
         config = _make_config(soft_compaction_limit=limit, compaction_target_fraction=target)
         data = await _make_agent_with_messages(
@@ -251,6 +257,11 @@ class TestCompactEdgeCases(CompactTestBase):
     async def test_targets_percentage_of_message_tokens(self):
         """compact retains compaction_target_fraction of current message tokens.
 
+        NOTE: the token framing below is technically correct but misleading — the
+        token arithmetic cancels out of the retention calculation, so the outcome
+        equals plain count-fraction retention (see compact()'s docstring). Kept
+        as-is to minimize churn before the agentic compaction overhaul.
+
         Setup: 400 char prompt ≈ 100 sys_tokens, 20 messages, total_tokens=2100
         → msg_tokens = 2100 - 100 = 2000, avg = 100 tok/msg
 
@@ -281,6 +292,10 @@ class TestCompactEdgeCases(CompactTestBase):
         assert result is False
         assert agent_deps.context_window_start == 0
 
+    # NOTE: passes under the new count-based compact, but its premise is obsolete —
+    # compact no longer searches for total_tokens at all (the helper that crawled back
+    # past a trailing request is gone). Kept to minimize churn before the agentic
+    # compaction overhaul; delete it then.
     async def test_crawls_back_past_trailing_request_for_total_tokens(self, agent_deps: AgentDeps):
         """compact() correctly finds total_tokens when the last message in context is a ModelRequest."""
         msgs = make_alternating_messages(10)   # ends with response at index 9
@@ -291,14 +306,6 @@ class TestCompactEdgeCases(CompactTestBase):
         result = await compact(agent_deps)
 
         assert result is True  # found total_tokens on the response, compaction proceeded
-
-    async def test_raises_when_model_response_total_tokens_is_none(self):
-        """compact raises RuntimeError when the last ModelResponse has no usage data."""
-        # make_response() without total_tokens produces a record with total_tokens=None in DB
-        await self._setup(limit=500, target=0.5, msg_count=10, total_tokens=None)
-
-        with pytest.raises(RuntimeError, match="total_tokens=None"):
-            await compact(self.deps)
 
 
 class TestCompactToolPairAtomicity(DBTestBase):

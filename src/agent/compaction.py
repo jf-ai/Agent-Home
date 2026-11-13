@@ -20,33 +20,6 @@ logger = logging.getLogger(__name__)
 MIN_MESSAGES_AFTER_COMPACTION = 4
 
 
-def _get_total_tokens_from_messages(messages: list[MessageRecord]) -> int:
-    """Extract total_tokens from the last ModelResponse in messages.
-    
-    Args:
-        messages: List of MessageRecord DB objects to search.
-    
-    Returns:
-        total_tokens from the last ModelResponse.
-    
-    Raises:
-        ValueError: If no ModelResponse found in messages.
-        RuntimeError: If ModelResponse.total_tokens is None.
-    """
-    last_response = next(
-        (m for m in reversed(messages) if m.type == "ModelResponse"),
-        None,
-    )
-    if last_response is None:
-        raise ValueError("No ModelResponse found in messages")
-    if last_response.total_tokens is None:
-        raise RuntimeError(
-            f"ModelResponse (seq_id={last_response.seq_id}) has total_tokens=None — "
-            "usage data missing; cannot calculate compaction target"
-        )
-    return last_response.total_tokens
-
-
 def is_compaction_needed(total_tokens: int | None, config: AgentConfig) -> bool:
     """Check if compaction should be triggered based on token count.
 
@@ -63,14 +36,20 @@ def is_compaction_needed(total_tokens: int | None, config: AgentConfig) -> bool:
 async def compact(deps: AgentDeps) -> bool:
     """Advance context_window_start to reduce context size.
 
-    Derives total_tokens from the last ModelResponse in context (where we store cumulative usage from pydantic AI),
-    estimates system prompt tokens from character count,
-    and advances the pointer to retain the target fraction of current message tokens.
+    Retention is by MESSAGE COUNT: keep compaction_target_fraction of the
+    in-context messages (never fewer than MIN_MESSAGES_AFTER_COMPACTION), then
+    advance the pointer. This is just an easy way to do it for now that gives the user
+    some confidence that the agent will have some controlled amount of messages left over
+    after compact, independent of how full the ctx is from memories and tools.
+
+    Known imprecision (acceptable until the agentic compaction overhaul): message
+    sizes vary widely, so count-fraction retention only approximates
+    token-fraction retention. Triggering is unaffected — the runner fires
+    compaction off the accurate provider total.
 
     Guarantees:
     - Never evicts the most recent 4 messages
     - No-op if 4 or fewer messages in context
-    - No-op if no ModelResponse found in context (context too young to compact)
     - Does NOT delete messages (pointer manipulation only)
     - Tool call/return pairs are kept atomic (never split across the boundary)
     - Calls compile_system_prompt after advancing pointer
@@ -81,29 +60,14 @@ async def compact(deps: AgentDeps) -> bool:
             session, deps.agent_id, start_seq_id=deps.context_window_start
         )
 
-    # small context guard/avoid div by 0
+    # small context guard
     if len(messages) <= MIN_MESSAGES_AFTER_COMPACTION:
         return False
 
-    try:
-        total_tokens = _get_total_tokens_from_messages(messages)
-    except ValueError:
-        logger.warning("compact: no ModelResponse found in context — skipping compaction")
-        return False
-
-    # TODO (low priority): we may eventually want a more sophisticated way to estimate tokens, and some sort of
-    # check and loop on resulting in-context message token count to be more accurate if we find it necessary
-    sys_tokens = len(deps.compiled_system_prompt) / 4
-    msg_tokens = total_tokens - sys_tokens
-    avg_tokens_per_msg = msg_tokens / len(messages)
-    if avg_tokens_per_msg <= 0:
-        return False  # System prompt dominates token budget — can't estimate, skip this turn
-    # Target a fraction of the current message tokens rather than a fraction of the total limit.
-    # This keeps compaction aggression constant as core memory grows — larger core means more frequent
-    # compaction (fires sooner) but not more aggressive compaction (always retains the same fraction
-    # of message history).
-    target_msg_tokens = deps.config.compaction_target_fraction * msg_tokens
-    n_msg_to_keep = max(MIN_MESSAGES_AFTER_COMPACTION, int(target_msg_tokens / avg_tokens_per_msg))
+    n_msg_to_keep = max(
+        MIN_MESSAGES_AFTER_COMPACTION,
+        int(deps.config.compaction_target_fraction * len(messages)),
+    )
 
     if n_msg_to_keep >= len(messages):
         return False
