@@ -705,7 +705,7 @@ async def cmd_history(state: CLIState, client: httpx.AsyncClient, args: list[str
             if not messages:
                 output(state, "No messages yet.")
             else:
-                output(state, f"\n--- Message History ({len(messages)} messages) ---\n")
+                output(state, f"\n--- Message History ({len(messages)} messages, agent {state.active_agent_id}) ---\n")
                 for msg in messages:
                     # Endpoint may return parsed message dicts or raw DB records
                     # where parts are JSON-encoded in a "content" field
@@ -716,7 +716,7 @@ async def cmd_history(state: CLIState, client: httpx.AsyncClient, args: list[str
                     kind = inner.get("kind") or msg.get("kind", "unknown")
                     parts = inner.get("parts") or msg.get("parts", [])
                     role = "User" if kind == "request" else "Assistant"
-                    output(state, f"**{role}:**")
+                    output(state, f"**{role}:** [seq {msg.get('seq_id')} | {msg.get('id')}]")
 
                     has_thinking = any(p.get("part_kind") == "thinking" for p in parts)
                     for part in parts:

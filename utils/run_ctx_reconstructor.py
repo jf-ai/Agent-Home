@@ -2,6 +2,9 @@
 
 Usage (from Agent-Home root):
     uv run python utils/run_ctx_reconstructor.py /path/to/agent_home.sqlite <message_uuid> --output /path/to/output.txt
+    uv run python utils/run_ctx_reconstructor.py /path/to/agent_home.sqlite --agent <agent_id> --seq <seq_id> --output /path/to/output.txt
+
+The CLI's /history prints the agent ID in its header and each message's seq_id and UUID.
 
 Reconstructs the context that existed when a specific message was processed, using
 the same snapshots that were active at that time (system prompt, tool definitions,
@@ -17,7 +20,10 @@ import asyncio
 import sys
 from pathlib import Path
 
+from sqlalchemy import select
+
 from db.connection import create_readonly_sqlite_engine, get_session
+from db.models import MessageRecord
 from utils.ctx_reconstructor import reconstruct_context, ReconstructedContext
 
 
@@ -64,14 +70,25 @@ def _format_reconstruction(ctx: ReconstructedContext) -> str:
     return "\n".join(lines)
 
 
-async def run(db_path: Path, message_id: str, output_path: Path) -> int:
-    """Run context reconstruction. Returns 0 on success, 1 on error."""
-    
+async def run(db_path: Path, message_id: str | None, agent_id: str | None, seq_id: int | None, output_path: Path) -> int:
+    """Run context reconstruction. Returns 0 on success, 1 on error.
+
+    The target is given either as message_id, or as agent_id + seq_id.
+    """
+
     engine = create_readonly_sqlite_engine(str(db_path.absolute()))
-    
+
     try:
         async with get_session(engine) as session:
             try:
+                if message_id is None:
+                    message_id = await session.scalar(
+                        select(MessageRecord.id).where(
+                            MessageRecord.agent_id == agent_id, MessageRecord.seq_id == seq_id
+                        )
+                    )
+                    if message_id is None:
+                        raise ValueError(f"No message with seq_id {seq_id} for agent {agent_id}")
                 ctx = await reconstruct_context(session, message_id)
             except ValueError as e:
                 print(f"Error: {e}", file=sys.stderr)
@@ -92,7 +109,9 @@ def main() -> int:
         epilog=__doc__,
     )
     parser.add_argument("db_path", type=Path, help="Path to agent_home.sqlite")
-    parser.add_argument("message_id", help="Message UUID to reconstruct context for")
+    parser.add_argument("message_id", nargs="?", help="Message UUID to reconstruct context for")
+    parser.add_argument("--agent", help="Agent ID (use with --seq instead of a message UUID)")
+    parser.add_argument("--seq", type=int, help="Message seq_id, as shown by the CLI's /history")
     parser.add_argument(
         "--output", "-o",
         type=Path,
@@ -103,11 +122,14 @@ def main() -> int:
     args = parser.parse_args()
     
     # Validation
+    by_seq = args.agent is not None and args.seq is not None
+    if (args.message_id is not None) == by_seq:
+        parser.error("give either a message UUID, or both --agent and --seq")
     if not args.db_path.exists():
         print(f"Error: Database not found: {args.db_path}", file=sys.stderr)
         return 1
     
-    return asyncio.run(run(args.db_path, args.message_id, args.output))
+    return asyncio.run(run(args.db_path, args.message_id, args.agent, args.seq, args.output))
 
 
 if __name__ == "__main__":

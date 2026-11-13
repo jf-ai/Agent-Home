@@ -37,7 +37,7 @@ async def test_writes_reconstruction(db_path, output_path, session, agent_record
     ])
     await session.commit()
 
-    exit_code = await run(db_path, _TARGET_ID, output_path)
+    exit_code = await run(db_path, _TARGET_ID, None, None, output_path)
 
     assert exit_code == 0
     output = output_path.read_text()
@@ -45,9 +45,33 @@ async def test_writes_reconstruction(db_path, output_path, session, agent_record
     assert _TARGET_CONTENT in output
 
 
+async def test_seq_lookup_matches_uuid_lookup(db_path, output_path, session, agent_record, seed_stub_snapshots):
+    """--agent/--seq resolves to the same target as the message UUID."""
+    session.add_all([
+        MessageRecord(**{**PARTIAL_MESSAGE_FIELDS, "content": _EARLIER_CONTENT},
+                      id=STUB_CTX_MSG_ID, agent_id=agent_record.id, seq_id=0, timestamp=utcnow()),
+        MessageRecord(**{**PARTIAL_MESSAGE_FIELDS, "type": "ModelResponse", "content": _TARGET_CONTENT},
+                      id=_TARGET_ID, agent_id=agent_record.id, seq_id=1, timestamp=utcnow()),
+    ])
+    await session.commit()
+
+    exit_code = await run(db_path, None, agent_record.id, 1, output_path)
+
+    assert exit_code == 0
+    assert _EARLIER_CONTENT in output_path.read_text()
+
+
+async def test_seq_not_found(db_path, output_path, agent_record):
+    """Unknown seq_id: exit code 1 and no output file."""
+    exit_code = await run(db_path, None, agent_record.id, 99, output_path)
+
+    assert exit_code == 1
+    assert not output_path.exists()
+
+
 async def test_message_not_found(db_path, output_path):
     """Unknown message id: exit code 1 and no output file."""
-    exit_code = await run(db_path, _TARGET_ID, output_path)
+    exit_code = await run(db_path, _TARGET_ID, None, None, output_path)
 
     assert exit_code == 1
     assert not output_path.exists()
