@@ -5,6 +5,7 @@ R/W routes should take deps from get_agent_deps which acquires and holds the loc
 
 TODO: We have some exception catching and mapping that doesn't use "raise ... from e", probably some places we want to add the chaining.
 """
+import json
 import logging
 from typing import Any, AsyncGenerator
 
@@ -12,6 +13,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import ValidationError
 from pydantic_ai import Agent, AgentRunResultEvent
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.connection import ReadOnlySession, get_engines
@@ -32,6 +34,7 @@ from agent.broadcast_streaming import BroadcastHub, RunErrorEvent, run_agent_wit
 from api.fastapi_deps import get_ro_session_dep, get_agent_and_deps, get_agent_app_state_reg, get_agent_deps, get_broadcast_hub
 from prototype.api.slash_commands import get_available_commands, is_slash_cmd, handle_slash_cmd
 from api.schemas import (
+    AgentDetailResponse,
     AgentMetadataResponse,
     CoreMemoryResponse,
     CreateAgentRequest,
@@ -41,8 +44,10 @@ from api.schemas import (
     MessageRequest,
     MessagesResponse,
     SystemInstructionsResponse,
+    ToolDefinitionsResponse,
     UpdateBlockContentRequest,
 )
+from db.models import MessageRecord, ToolDefinitionSnapshot
 from memory.block_crud import (
     ContentExceedsLimitError,
     InvalidBlockOrderListError,
@@ -270,10 +275,10 @@ async def put_system_instructions(
 async def get_agent_info(
     agent_id: str,
     session: ReadOnlySession = Depends(get_ro_session_dep),
-) -> AgentMetadataResponse:
-    """Return metadata for an existing agent."""
+) -> AgentDetailResponse:
+    """Return metadata plus context-relevant fields (compiled prompt, window start)."""
     record = await _get_agent_record_or_404(session, agent_id)
-    return AgentMetadataResponse.from_record(record)
+    return AgentDetailResponse.from_record(record)
 
 
 @router.get("/by-name/{agent_name}")
@@ -294,6 +299,38 @@ async def get_config(
     """Return the config for an existing agent."""
     record = await _get_agent_record_or_404(session, agent_id)
     return record.agent_config
+
+
+@router.get("/{agent_id}/tool-definitions")
+async def get_tool_definitions(
+    agent_id: str,
+    session: ReadOnlySession = Depends(get_ro_session_dep),
+) -> ToolDefinitionsResponse:
+    """Return the tool definitions in effect for the agent's most recent persist."""
+    if not (await agent_exists(session, agent_id)):
+        raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
+
+    result = await session.execute(
+        select(MessageRecord.tool_definition_hash)
+        .where(MessageRecord.agent_id == agent_id)
+        .order_by(MessageRecord.seq_id.desc())
+        .limit(1)
+    )
+    snapshot_id = result.scalar()
+    if snapshot_id is None:
+        return ToolDefinitionsResponse(definitions=[], snapshot_id=None, snapshot_created_at=None)
+
+    snapshot = await session.get(ToolDefinitionSnapshot, snapshot_id)
+    if snapshot is None:  # Snapshot rows are permanent; missing hash means DB inconsistency
+        raise HTTPException(
+            status_code=500,
+            detail=f"Tool definition snapshot {snapshot_id} referenced by agent {agent_id!r} not found",
+        )
+    return ToolDefinitionsResponse(
+        definitions=json.loads(snapshot.content),
+        snapshot_id=snapshot.id,
+        snapshot_created_at=snapshot.created_at,
+    )
 
 
 @router.get("/{agent_id}/memory/blocks")
@@ -419,13 +456,12 @@ async def get_messages(
 ) -> MessagesResponse:
     """
     Return conversation history. Use ?full=true for complete history.
-    TODO: Another instance of bad read-only control
     """
     record = await _get_agent_record_or_404(session, agent_id)
     # TODO: Don't need agent record if requesting full, but we're likely gonna rework this anyway
     start_seq_id = 0 if full else record.context_window_start
     messages = await load_messages(session, agent_id, start_seq_id=start_seq_id)
     return MessagesResponse(messages=[
-        MessageItem(id=m.id, seq_id=m.seq_id, type=m.type, content=m.content, timestamp=m.timestamp)
+        MessageItem(id=m.id, seq_id=m.seq_id, type=m.type, content=m.content, timestamp=m.timestamp, total_tokens=m.total_tokens)
         for m in messages
     ])

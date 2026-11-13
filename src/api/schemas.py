@@ -97,12 +97,49 @@ class MessageItem(BaseModel):
     type: str       # 'ModelRequest' | 'ModelResponse' | 'Summary'
     content: str    # raw serialized ModelMessage JSON
     timestamp: datetime
+    total_tokens: int | None = None  # Provider-reported usage; set on ModelResponses only
 
 
 class MessagesResponse(BaseModel):
     # list[Any]: display-layer parsing deferred until UI/CLI needs are known (see MessageItem TODO above)
     # TODO: Constrain back to MessageItem once we have the format settled
     messages: list
+
+
+class AgentDetailResponse(AgentMetadataResponse):
+    """AgentMetadataResponse plus the fields a context/status consumer needs.
+
+    Kept separate from the list responses so bulk listing doesn't carry the
+    (potentially large) compiled prompt for every agent.
+    """
+    compiled_system_prompt: str
+    context_window_start: int
+
+    @classmethod
+    def from_record(cls, record: "AgentRecord") -> "AgentDetailResponse":
+        return cls(
+            id=record.id,
+            name=record.name,
+            model=record.agent_config.model_name,
+            created_at=record.created_at,
+            updated_at=record.updated_at,
+            compiled_system_prompt=record.compiled_system_prompt,
+            context_window_start=record.context_window_start,
+        )
+
+
+class ToolDefinitionsResponse(BaseModel):
+    """The tool definitions in effect for an agent's most recent persist.
+
+    Definitions are the raw pydantic-ai ToolDefinition dicts (name, description,
+    parameters_json_schema, ...). Resolved via the tool_definition_hash on the
+    agent's latest message — snapshots are content-addressed and shared across
+    agents, so snapshot recency is meaningless; the agent's own last message
+    defines which snapshot was in effect.
+    """
+    definitions: list[dict]
+    snapshot_id: str | None      # SHA256 content hash, None if agent has no messages yet
+    snapshot_created_at: datetime | None
 
 
 class HealthResponse(BaseModel):
