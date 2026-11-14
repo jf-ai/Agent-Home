@@ -57,7 +57,10 @@ def _segment_widths(status: AgentContextStatus, inner: int, scale: int) -> dict[
 
 
 def _render_bar(status: AgentContextStatus, inner: int, color: bool) -> str:
-    scale = max(status.total_tokens or 0, status.soft_limit or 0, 1)
+    # Headroom keeps the soft-limit marker visibly inside the bar instead of
+    # fused against ']' whenever the soft limit is the scale maximum (the
+    # healthy case — most bars most of the time).
+    scale = max(status.total_tokens or 0, status.soft_limit or 0, 1) * 1.1
 
     if status.total_tokens is None:
         body = "no usage data yet"

@@ -28,9 +28,9 @@ def _status(**overrides) -> AgentContextStatus:
 class TestRenderDashboard:
     def test_bar_geometry_nocolor(self):
         """Segments render proportionally in tools/sys/msgs order; marker at soft limit."""
-        # scale = max(total=6000, soft=8000) = 8000; inner width = 58
-        # tools: 1000/8000*58 = 7, sys: 2000/8000*58 = 14, msgs: 6000/8000*58-21 = 22
-        # marker: 8000/8000*58 = 58 -> clamped to 57
+        # scale = max(total=6000, soft=8000) * 1.1 = 8800; inner width = 58
+        # tools: 1000/8800*58 = 6, sys: 2000/8800*58 = 13, msgs: 6000/8800*58-19 = 20
+        # marker: 8000/8800*58 = 52
         frame = render_dashboard([_status()], width=60, color=False)
         lines = frame.splitlines()
         assert lines[0] == "test-agent"
@@ -38,19 +38,18 @@ class TestRenderDashboard:
         assert bar.startswith("[") and bar.endswith("]")
         inner = bar[1:-1]
         assert len(inner) == 58
-        assert inner.startswith("/" * 7)
-        assert inner[7:21] == "-" * 14
-        assert inner[21:43] == "#" * 22
-        # trailing blank run is 14 spaces; the marker overrides the final cell
-        assert inner[43:57] == " " * 14
-        assert inner[57] == "|"
+        assert inner.startswith("/" * 6)
+        assert inner[6:19] == "-" * 13
+        assert inner[19:39] == "#" * 20
+        assert inner[39:52] == " " * 13
+        assert inner[52] == "|"
 
     def test_marker_inside_messages_when_total_exceeds_limit(self):
         """soft limit marker overlays the bar body when total already passes it."""
         frame = render_dashboard([_status(total_tokens=6000, msg_tokens=3000, soft_limit=4000)], width=60, color=False)
         inner = frame.splitlines()[1][1:-1]
-        # scale=6000, marker col = 4000/6000*58 = 38 (inside the '#' segment)
-        assert inner[38] == "|"
+        # scale=6000*1.1=6600, marker col = int(4000/6600*58) = 35 (inside the '#' segment)
+        assert inner[35] == "|"
 
     def test_no_usage_data_placeholder(self):
         frame = render_dashboard([_status(total_tokens=None, msg_tokens=None, tool_tokens=None, sys_tokens=None)], width=60, color=False)
