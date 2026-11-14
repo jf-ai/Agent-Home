@@ -62,6 +62,16 @@ class TestRenderDashboard:
         assert "█" in frame
         assert "/" not in frame.splitlines()[1]  # symbols replaced by blocks
 
+    def test_annotation_labels_tinted_with_segment_colors(self):
+        """Each segment's numeric label shares its bar region's color (hue = link)."""
+        frame = render_dashboard([_status()], width=60, color=True)
+        ann = frame.splitlines()[2]
+        assert "\x1b[96mtools=1.0k\x1b[0m" in ann
+        assert "\x1b[94msys=2.0k\x1b[0m" in ann
+        assert "\x1b[92mmsgs=3.0k\x1b[0m" in ann
+        assert "total=6.0k" in ann  # total has no segment color
+        assert "\x1b[93m| soft=8.0k\x1b[0m" in ann  # marker color, as before
+
     def test_annotations_line_has_numbers(self):
         frame = render_dashboard([_status()], width=60, color=False)
         ann = frame.splitlines()[2]

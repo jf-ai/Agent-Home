@@ -88,12 +88,14 @@ def _render_bar(status: AgentContextStatus, inner: int, color: bool) -> str:
 
 
 def _render_annotations(status: AgentContextStatus, color: bool) -> str:
-    parts = [
-        f"tools={_fmt_tokens(status.tool_tokens)}",
-        f"sys={_fmt_tokens(status.sys_tokens)}",
-        f"msgs={_fmt_tokens(status.msg_tokens)}",
-        f"total={_fmt_tokens(status.total_tokens)}",
-    ]
+    # Each segment's label is tinted with the segment's bar color, linking the
+    # numbers to the regions by hue (order matches the bar left-to-right).
+    parts = []
+    for seg in SEGMENT_ORDER:
+        label = f"{seg}={_fmt_tokens(getattr(status, _SEGMENT_ATTRS[seg]))}"
+        ansi = PALETTE[seg][1]
+        parts.append(f"{ansi}{label}{RESET}" if color and ansi else label)
+    parts.append(f"total={_fmt_tokens(status.total_tokens)}")
     line = "  ".join(parts)
     if status.soft_limit is not None:
         marker = f"| soft={_fmt_tokens(status.soft_limit)}"
