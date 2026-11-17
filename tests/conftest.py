@@ -11,7 +11,7 @@ os.environ.setdefault("AGENT_HOME_DB_PATH", os.path.expanduser("~/.agent-home_py
 
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import pytest
@@ -34,6 +34,7 @@ from db.models import (
     AgentRecord,
     Base,
     MemoryBlockRecord,
+    MessageRecord,
     SystemPromptSnapshot,
     ToolDefinitionSnapshot,
     utcnow,
@@ -153,6 +154,39 @@ PARTIAL_MESSAGE_FIELDS = {
     "agent_config_hash": STUB_CONFIG_HASH,
     "context_window_start_msg_id": STUB_CTX_MSG_ID,
 }
+
+
+def make_message_record(
+    agent_id: str,
+    seq_id: int,
+    total_tokens: int | None = None,
+    *,
+    window_start_id: str = STUB_CTX_MSG_ID,
+    message_id: str | None = None,
+    system_prompt_hash: str = STUB_SYS_HASH,
+    tool_definition_hash: str = STUB_TOOL_HASH,
+) -> MessageRecord:
+    """A MessageRecord row with the fields context-status reads spelled out explicitly.
+
+    Structured so tests can model the states that matter: total_tokens=None is a
+    ModelRequest row (the newest row during a tool-using run), and window_start_id is
+    the context_window_start_msg_id recorded at persist time (which diverges from the
+    agent's current window start after a compaction). Defaults point at the stub
+    snapshots, so the seeding classes must activate `seed_stub_snapshots`.
+    """
+    return MessageRecord(
+        id=message_id or str(uuid.uuid4()),
+        agent_id=agent_id,
+        type="ModelResponse" if total_tokens is not None else "ModelRequest",
+        content="{}",
+        total_tokens=total_tokens,
+        seq_id=seq_id,
+        timestamp=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+        system_prompt_hash=system_prompt_hash,
+        tool_definition_hash=tool_definition_hash,
+        agent_config_hash=STUB_CONFIG_HASH,
+        context_window_start_msg_id=window_start_id,
+    )
 
 
 @pytest_asyncio.fixture

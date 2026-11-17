@@ -22,6 +22,7 @@ from agent.crud import (
     get_agent_record,
     get_agent_record_by_name,
     get_all_agents,
+    get_context_status,
     replace_agent_config,
     replace_system_instructions,
 )
@@ -32,6 +33,7 @@ from agent.broadcast_streaming import BroadcastHub, RunErrorEvent, run_agent_wit
 from api.fastapi_deps import get_ro_session_dep, get_agent_and_deps, get_agent_app_state_reg, get_agent_deps, get_broadcast_hub
 from prototype.api.slash_commands import get_available_commands, is_slash_cmd, handle_slash_cmd
 from api.schemas import (
+    AgentContextStatusResponse,
     AgentMetadataResponse,
     CoreMemoryResponse,
     CreateAgentRequest,
@@ -264,6 +266,37 @@ async def put_system_instructions(
     """Replace system instructions for an existing agent and recompile."""
     result = await replace_system_instructions(deps, body.system_instructions)
     return SystemInstructionsResponse(system_instructions=result)
+
+
+@router.get("/status")
+async def get_agents_status(
+    session: ReadOnlySession = Depends(get_ro_session_dep),
+    agent_app_state_reg: dict[str, AgentAppState] = Depends(get_agent_app_state_reg),
+) -> list[AgentContextStatusResponse]:
+    """Return context composition for every agent on the server, in one request.
+
+    Exists so monitoring consumers don't have to enumerate agents and then issue several
+    requests per agent: the previous approach cost 1+4N requests (each opening its own
+    SQLite connection) and pulled the full message window just to read one integer.
+
+    Everything is read through a single session — one read snapshot — so the agent list and
+    the per-agent figures cannot disagree while new agents are being created.
+
+    active is in-process runtime state (whether the agent lock is held), so this route
+    assumes it is served by the same process that runs agents. That is always true today:
+    the API and the runner share one process.
+    """
+    records = await get_all_agents(session)
+    statuses: list[AgentContextStatusResponse] = []
+    for record in records:
+        status = await get_context_status(session, record.id, record.context_window_start)
+        app_state = agent_app_state_reg.get(record.id)
+        statuses.append(
+            AgentContextStatusResponse.from_record(
+                record, status, active=bool(app_state and app_state.lock.locked())
+            )
+        )
+    return statuses
 
 
 @router.get("/{agent_id}")

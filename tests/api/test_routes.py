@@ -31,10 +31,15 @@ from agent.deps import AgentDeps
 from agent.types import AgentAppState, AgentConfig, BlockSettings
 from api.fastapi_deps import get_agent_deps
 from agent.crud import create_agent_record
-from conftest import SAMPLE_AGENT_CONFIG, make_deps
+from conftest import SAMPLE_AGENT_CONFIG, commit_and_detach_fixture_record, make_deps, make_message_record
 from db.connection import ReadOnlySession
 from db.models import AgentRecord, utcnow
-from api.schemas import AgentMetadataResponse, CoreMemoryResponse, MemoryBlockResponse
+from api.schemas import (
+    AgentContextStatusResponse,
+    AgentMetadataResponse,
+    CoreMemoryResponse,
+    MemoryBlockResponse,
+)
 from memory.block_crud import BlockNotFoundError, ContentExceedsLimitError, InvalidBlockOrderListError, MemoryBlock
 
 
@@ -325,6 +330,80 @@ class TestListAgents:
             key=lambda r: str(r.id),
         )
         assert result == sorted(expected, key=lambda r: str(r.id))
+
+
+class TestGetAgentsStatus:
+    """GET /agents/status — context composition for every agent in one request."""
+
+    async def test_route_is_not_shadowed_by_the_agent_id_route(self, client: AsyncClient):
+        """/agents/status must not be captured by GET /agents/{agent_id}."""
+        response = await client.get("/agents/status")
+
+        assert response.status_code == 200
+        assert response.json() == []
+
+    async def test_agent_with_no_messages_reports_nothing_measured(self, client: AsyncClient, agent_record: AgentRecord):
+        response = await client.get("/agents/status")
+
+        assert response.status_code == 200
+        assert [AgentContextStatusResponse.model_validate(item) for item in response.json()] == [
+            AgentContextStatusResponse(
+                id=agent_record.id,
+                name=agent_record.name,
+                total_tokens=None,
+                sys_prompt_bytes=None,
+                tool_defs_bytes=None,
+                soft_compaction_limit=SAMPLE_AGENT_CONFIG.soft_compaction_limit,
+                stale=False,
+                active=False,
+            )
+        ]
+
+    async def test_active_reflects_a_held_agent_lock(
+        self, client: AsyncClient, app: FastAPI, agent_record: AgentRecord
+    ):
+        app.state.agent_app_state_reg[agent_record.id] = AgentAppState()
+
+        async with app.state.agent_app_state_reg[agent_record.id].lock:
+            running = await client.get("/agents/status")
+        idle = await client.get("/agents/status")
+
+        assert [item["active"] for item in running.json()] == [True]
+        assert [item["active"] for item in idle.json()] == [False]
+
+    @pytest.mark.usefixtures("seed_stub_snapshots")
+    async def test_stale_flag_is_per_agent(
+        self, client: AsyncClient, session: AsyncSession, agent_record: AgentRecord
+    ):
+        """One agent compacted, one not — a global calculation would flag both or neither."""
+        fresh = await commit_and_detach_fixture_record(
+            session,
+            AgentRecord(name="fresh-agent", agent_config=SAMPLE_AGENT_CONFIG, system_instructions=""),
+        )
+        stale_start, compacted_start, fresh_start = str(uuid4()), str(uuid4()), str(uuid4())
+        stale_agent_id, fresh_agent_id = agent_record.id, fresh.id  # read before commit expires
+        # Compaction advanced the first agent's pointer, leaving its last response measured
+        # against the old window; the second agent never compacted.
+        agent_record.context_window_start = 1
+        session.add(agent_record)
+        session.add_all([
+            make_message_record(stale_agent_id, 0, 100, window_start_id=stale_start, message_id=stale_start),
+            make_message_record(stale_agent_id, 1, None, window_start_id=stale_start, message_id=compacted_start),
+            make_message_record(stale_agent_id, 2, 500, window_start_id=stale_start),
+            make_message_record(fresh_agent_id, 0, 100, window_start_id=fresh_start, message_id=fresh_start),
+            make_message_record(fresh_agent_id, 1, 300, window_start_id=fresh_start),
+        ])
+        await session.commit()
+
+        response = await client.get("/agents/status")
+
+        statuses = {
+            item["id"]: AgentContextStatusResponse.model_validate(item) for item in response.json()
+        }
+        assert statuses[stale_agent_id].total_tokens == 500
+        assert statuses[stale_agent_id].stale is True
+        assert statuses[fresh_agent_id].total_tokens == 300
+        assert statuses[fresh_agent_id].stale is False
 
 
 class TestGetAgent:

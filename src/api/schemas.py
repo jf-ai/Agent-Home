@@ -9,6 +9,7 @@ from agent.types import AgentConfig
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from agent.crud import ContextStatus
     from db.models import AgentRecord, MemoryBlockRecord
 
 
@@ -60,6 +61,42 @@ class AgentMetadataResponse(BaseModel):
             model=record.agent_config.model_name,
             created_at=record.created_at,
             updated_at=record.updated_at,
+        )
+
+
+class AgentContextStatusResponse(BaseModel):
+    """One agent's context composition, as of its most recent model response.
+
+    Byte counts are UTF-8 bytes of provider-visible content — the system prompt, and
+    the tool definitions minus pydantic-ai metadata that never reaches a provider.
+    They are None when the agent has no in-window response yet. Consumers convert to
+    tokens themselves; this layer reports facts, not estimates.
+
+    stale: the measurement predates the current context window (compaction advanced it
+    since). active: a run is in flight right now — in-process runtime state, not a DB fact.
+    """
+    id: str
+    name: str
+    total_tokens: int | None = None
+    sys_prompt_bytes: int | None = None
+    tool_defs_bytes: int | None = None
+    soft_compaction_limit: int
+    stale: bool
+    active: bool
+
+    @classmethod
+    def from_record(
+        cls, record: "AgentRecord", status: "ContextStatus", *, active: bool
+    ) -> "AgentContextStatusResponse":
+        return cls(
+            id=record.id,
+            name=record.name,
+            total_tokens=status.total_tokens,
+            sys_prompt_bytes=status.sys_prompt_bytes,
+            tool_defs_bytes=status.tool_defs_bytes,
+            soft_compaction_limit=record.agent_config.soft_compaction_limit,
+            stale=status.stale,
+            active=active,
         )
 
 
