@@ -31,10 +31,20 @@ def _ansi_frame(frame: str) -> str:
 
 
 async def _poll_once(client: httpx.AsyncClient, width: int, color: bool):
+    """Fetch and render one frame. Returns (None, message) on failure; the caller prints it.
+
+    Failures are printed, never swallowed: a 500 carries an actionable detail from the
+    server (e.g. which agent has an inconsistent DB row), and a payload that doesn't match
+    the contract means client and server disagree — both must be visible on screen.
+    """
     try:
         statuses = await fetch_dashboard_statuses(client)
+    except httpx.HTTPStatusError as e:
+        return None, f"server error {e.response.status_code}: {e.response.text}"
     except httpx.HTTPError as e:
         return None, f"server unreachable: {e.__class__.__name__}: {e}"
+    except Exception as e:  # Unexpected payload shape: surface it, don't die on a monitor.
+        return None, f"unexpected status response: {e.__class__.__name__}: {e}"
     return statuses, render_dashboard(statuses, width=width, color=color)
 
 

@@ -7,6 +7,7 @@ import httpx
 import pytest
 
 from prototype.dashboard.fetcher import fetch_dashboard_statuses, status_from_payload
+from prototype.dashboard.__main__ import _poll_once
 from prototype.dashboard.render import render_dashboard
 from prototype.dashboard.types import AgentContextStatus
 
@@ -192,3 +193,51 @@ class TestRenderDashboard:
         lines = frame.splitlines()
         assert lines[0] == "test-agent\x1b[93m (stale)\x1b[0m"
         assert lines[4] == "both\x1b[92m (active)\x1b[0m\x1b[93m (stale)\x1b[0m"
+
+
+class TestPollOnceErrorReporting:
+    """A monitor must print failures rather than swallow them — and stay alive doing it."""
+
+    @staticmethod
+    def _client(handler) -> httpx.AsyncClient:
+        return httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://test")
+
+    async def test_server_error_prints_status_and_server_detail(self):
+        """A 500 from /agents/status names the offending agent in `detail` — show it."""
+        client = self._client(
+            lambda request: httpx.Response(
+                500, json={"detail": "RuntimeError: Agent 'abc' has a message referencing a missing snapshot"}
+            )
+        )
+        try:
+            statuses, message = await _poll_once(client, width=60, color=False)
+        finally:
+            await client.aclose()
+
+        assert statuses is None
+        assert message.startswith("server error 500: ")
+        assert "missing snapshot" in message
+
+    async def test_unexpected_payload_is_reported_not_raised(self):
+        """Contract drift (missing fields) must be visible, not a silent blank frame."""
+        client = self._client(lambda request: httpx.Response(200, json=[{"name": "Opus"}]))
+        try:
+            statuses, message = await _poll_once(client, width=60, color=False)
+        finally:
+            await client.aclose()
+
+        assert statuses is None
+        assert message.startswith("unexpected status response: KeyError: ")
+
+    async def test_connection_failure_is_reported(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise httpx.ConnectError("connection refused")
+
+        client = self._client(handler)
+        try:
+            statuses, message = await _poll_once(client, width=60, color=False)
+        finally:
+            await client.aclose()
+
+        assert statuses is None
+        assert message == "server unreachable: ConnectError: connection refused"
