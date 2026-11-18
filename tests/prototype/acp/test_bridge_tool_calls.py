@@ -8,7 +8,8 @@ that contract so the bridge keeps giving Nori enough to use its native cells:
 - rawOutput: execute results land in "stdout" verbatim, so newlines stay real
   newlines instead of turning into literal \\n inside a JSON string
 - content: edit diffs, and bridge-rendered text for generic tools (Nori's
-  fetch/think/other bucket), since Nori has no structured cell for those
+  fetch/think/other bucket), since Nori has no structured cell for those;
+  generic tools omit rawInput so their args are not shown twice
 - process_sse_event: the call/result pair carries args and tool name through
 
 No HITL review
@@ -359,6 +360,21 @@ class TestGenericDisplay:
         assert lines[1] == "line 0"
         assert lines[8] == "… +6 lines"
         assert lines[-1] == "line 19"
+
+    def test_generic_kinds_omit_raw_input(self):
+        """Nori would print rawInput as a second "Tool: ..." line above the args."""
+        for tool_name in ("memory_insert", "web_fetch"):
+            update = update_of(
+                tool_call(SESSION_ID, CALL_ID, tool_name, {"label": "persona"})
+            )
+            assert "rawInput" not in update, tool_name
+
+        replayed = update_of(
+            tool_call_complete(
+                SESSION_ID, CALL_ID, "memory_insert", {"label": "persona"}, "done"
+            )
+        )
+        assert "rawInput" not in replayed
 
     def test_structured_kinds_still_send_no_content(self):
         for tool_name, args in (

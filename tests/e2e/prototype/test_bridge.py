@@ -327,7 +327,9 @@ async def test_tool_call_flows_through_with_structured_fields(
     assert call["title"] == "memory_insert"
     assert call["kind"] == "other"
     assert call["status"] == "in_progress"
-    assert call["rawInput"]["label"] == TOOL_PROBE_BLOCK
+    # Generic kinds carry their args as content, not rawInput.
+    assert "rawInput" not in call
+    assert TOOL_PROBE_BLOCK in call["content"][0]["content"]["text"]
 
     results = _update_payloads(msgs, "tool_call_update")
     assert results, "Expected a tool_call_update notification for the tool result"

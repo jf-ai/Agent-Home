@@ -370,21 +370,35 @@ def _result_content(
     return []
 
 
+def _with_raw_input(
+    update: dict[str, Any], tool_name: str | None, raw_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Attach rawInput, except for generic kinds.
+
+    Generic kinds already carry their args in `content`. Given rawInput too,
+    Nori prints a second, JSON-escaped "Tool: <name> {...}" summary line above
+    that content, so it is omitted for them. Structured kinds need rawInput:
+    Nori builds their command/path/query display from it.
+    """
+    if tool_kind(tool_name) not in _GENERIC_KINDS:
+        update["rawInput"] = raw_input
+    return update
+
+
 def tool_call(
     session_id: str, tool_call_id: str, tool_name: str, args: dict[str, Any] | str | None
 ) -> dict[str, Any]:
     """Build a ToolCall update for tool invocation start."""
     raw_input = _parse_tool_args(args)
-    return session_update(session_id, {
+    return session_update(session_id, _with_raw_input({
         "sessionUpdate": "tool_call",
         "toolCallId": tool_call_id,
         "title": tool_name,
         "kind": tool_kind(tool_name),
         "status": "in_progress",
-        "rawInput": raw_input,
         "locations": _tool_locations(raw_input),
         "content": _invocation_content(tool_name, raw_input),
-    })
+    }, tool_name, raw_input))
 
 
 def tool_call_update(
@@ -416,17 +430,16 @@ def tool_call_complete(
     content = _invocation_content(tool_name, raw_input) + _result_content(
         tool_name, result, status, raw_input
     )
-    return session_update(session_id, {
+    return session_update(session_id, _with_raw_input({
         "sessionUpdate": "tool_call",
         "toolCallId": tool_call_id,
         "title": tool_name,
         "kind": tool_kind(tool_name),
         "status": status,
-        "rawInput": raw_input,
         "rawOutput": _raw_output(tool_name, result, status) if result is not None else None,
         "locations": _tool_locations(raw_input),
         "content": content,
-    })
+    }, tool_name, raw_input))
 
 
 def available_commands_update(session_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
