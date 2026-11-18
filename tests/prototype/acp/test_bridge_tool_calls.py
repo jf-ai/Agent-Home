@@ -345,8 +345,9 @@ class TestGenericDisplay:
         assert text == "--------Args--------\nlabel: persona"
         assert "Result" not in text
 
-    def test_long_display_is_middle_truncated(self):
-        long_result = "\n".join(f"line {i}" for i in range(20))
+    def test_long_display_is_sent_whole(self):
+        """Nori caps long cells inline and shows the rest in its transcript."""
+        long_result = "\n".join(f"line {i}" for i in range(40))
 
         update = update_of(
             tool_call_update(
@@ -354,12 +355,8 @@ class TestGenericDisplay:
             )
         )
 
-        lines = update["content"][0]["content"]["text"].split("\n")
-        assert len(lines) == 16
-        assert lines[0] == "-------Result-------"
-        assert lines[1] == "line 0"
-        assert lines[8] == "… +6 lines"
-        assert lines[-1] == "line 19"
+        text = update["content"][0]["content"]["text"]
+        assert text == "-------Result-------\n" + long_result
 
     def test_generic_kinds_omit_raw_input(self):
         """Nori would print rawInput as a second "Tool: ..." line above the args."""

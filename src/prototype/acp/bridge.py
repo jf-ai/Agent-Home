@@ -183,9 +183,6 @@ def _result_text(result: Any) -> str:
 # and sends it as text content; Nori renders that verbatim.
 _GENERIC_KINDS = frozenset({"fetch", "think", "other"})
 
-# Matches Nori's Execute-cell output cap, so generic cells truncate the same way.
-_GENERIC_DISPLAY_MAX_LINES = 15
-
 # Section labels for generic cells. Nori renders this text dim and unstyled, so
 # the labels are the only separation the reader gets. Both are 20 columns.
 _ARGS_HEADER = "--------Args--------"
@@ -227,18 +224,10 @@ def _format_display_lines(value: Any, indent: int = 0) -> list[str]:
     ]
 
 
-def _truncate_display_lines(lines: list[str]) -> list[str]:
-    """Middle-truncate like Nori's Execute cells, keeping head and tail."""
-    if len(lines) <= _GENERIC_DISPLAY_MAX_LINES:
-        return lines
-    head = (_GENERIC_DISPLAY_MAX_LINES - 1) // 2
-    tail = _GENERIC_DISPLAY_MAX_LINES - head - 1
-    omitted = len(lines) - head - tail
-    return lines[:head] + [f"… +{omitted} lines"] + lines[-tail:]
-
-
 def _display_text(value: Any) -> str:
-    return "\n".join(_truncate_display_lines(_format_display_lines(value)))
+    """Full display text. Nori caps long cells inline ([tui] tool_output_lines)
+    and keeps the whole text for its transcript view, so nothing is cut here."""
+    return "\n".join(_format_display_lines(value))
 
 
 def _text_block(text: str) -> dict[str, Any]:
