@@ -4,7 +4,8 @@ Tests verify that _process_stream_event correctly handles:
 - RunStarted: sends status=working to Nori
 - RunCompleted: sends status=idle to Nori
 - Content events: forwarded via process_sse_event
-- state.stream_active: skips forwarding when user-initiated stream is active
+- state.stream_active: skips RunStarted and content when a user-initiated
+  stream is active, but still closes an active background run on RunCompleted
 
 No HITL review
 """
@@ -134,8 +135,8 @@ class TestProcessStreamEvent:
         assert mock_process.call_args[0][3] == "PartDeltaEvent"
 
     @pytest.mark.asyncio
-    async def test_skips_all_events_when_stream_active(self, state: BridgeState, stream_state: StreamState):
-        """All events should be skipped when stream_active is True."""
+    async def test_skips_start_and_content_when_stream_active(self, state: BridgeState, stream_state: StreamState):
+        """RunStarted and content events are skipped when stream_active is True."""
         state.stream_active = True
         with patch("prototype.acp.bridge.send") as mock_send, \
              patch("prototype.acp.bridge.process_sse_event", new_callable=AsyncMock) as mock_process:
@@ -151,6 +152,44 @@ class TestProcessStreamEvent:
 
         mock_send.assert_not_called()
         mock_process.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_run_completed_sends_idle_even_when_stream_active(
+        self, state: BridgeState, stream_state: StreamState
+    ):
+        """A background run finishing while a user prompt streams still ends with idle.
+
+        Otherwise observer_turn_active stays True and the next background run's
+        RunStarted sends no "working" status.
+        """
+        state.observer_turn_active = True
+        state.stream_active = True
+        with patch("prototype.acp.bridge.send") as mock_send:
+            await _process_stream_event(
+                state, stream_state, SESSION_ID, "RunCompletedEvent", '{"status": "cancelled"}'
+            )
+
+        assert state.observer_turn_active is False
+        mock_send.assert_called_once()
+        call_arg = mock_send.call_args[0][0]
+        assert call_arg["params"]["update"]["_meta"]["nori"]["status"] == "idle"
+
+    @pytest.mark.asyncio
+    async def test_user_run_completion_during_stream_sends_nothing(
+        self, state: BridgeState, stream_state: StreamState
+    ):
+        """The user's own run (whose RunStarted was skipped) completes silently."""
+        state.stream_active = True
+        with patch("prototype.acp.bridge.send") as mock_send:
+            await _process_stream_event(
+                state, stream_state, SESSION_ID, "RunStartedEvent", "{}"
+            )
+            await _process_stream_event(
+                state, stream_state, SESSION_ID, "RunCompletedEvent", '{"status": "success"}'
+            )
+
+        assert state.observer_turn_active is False
+        mock_send.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handles_invalid_json_gracefully(self, state: BridgeState, stream_state: StreamState):
