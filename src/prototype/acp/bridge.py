@@ -479,10 +479,6 @@ class BridgeState:
     # Accumulated usage for the current turn
     usage: dict[str, int] | None = None
 
-    # True while a toad-initiated prompt stream is active — stream subscription skips
-    # forwarding during this window to avoid double-sending content.
-    stream_active: bool = False
-
     # True while we are in observer-turn "working" state (status=working sent, idle not yet sent).
     observer_turn_active: bool = False
 
@@ -782,8 +778,8 @@ async def subscribe_to_agent_stream(
     - RunCompletedEvent: send status=idle to Nori
 
     Automatically reconnects on disconnect with exponential backoff.
-    Skips forwarding while a toad-initiated stream is active (stream_active=True)
-    to avoid double-sending content from user-initiated runs.
+    The bridge's own prompts send Suppress-Broadcast, so their runs never appear
+    on this stream; everything here belongs to runs started elsewhere.
     """
     reconnect_delay = STREAM_RECONNECT_BASE_DELAY
 
@@ -846,17 +842,7 @@ async def _process_stream_event(
 
     Handles RunStartedEvent/RunCompletedEvent for status updates, and delegates
     content events to process_sse_event for forwarding to Nori.
-
-    While a user-initiated stream is active (stream_active), that stream forwards
-    its own run, so RunStarted and content events are skipped to avoid
-    double-sending. RunCompleted is still handled: a background run can finish
-    while the user's prompt waits for the agent lock, and dropping its completion
-    would leave observer_turn_active stuck, so the next background run would get
-    no "working" status.
     """
-    if state.stream_active and event_type != "RunCompletedEvent":
-        return
-
     try:
         data = json.loads(data_str) if data_str else {}
     except json.JSONDecodeError:
@@ -1011,9 +997,6 @@ async def handle_session_prompt(
         send(error_response(msg["id"], -32602, "Empty prompt"))
         return
     
-    # Mark stream as active so the SSE subscription knows to skip forwarding
-    # (we're already streaming directly to Nori via the HTTP response).
-    state.stream_active = True
     try:
         async with client.stream(
             "POST",
@@ -1035,8 +1018,6 @@ async def handle_session_prompt(
     except httpx.RequestError as e:
         send(error_response(msg["id"], -32000, f"Request failed: {e}"))
         return
-    finally:
-        state.stream_active = False
 
     # Turn complete — send response
     send(response(msg["id"], {
