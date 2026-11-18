@@ -844,10 +844,15 @@ async def _process_stream_event(
 
     Handles RunStartedEvent/RunCompletedEvent for status updates, and delegates
     content events to process_sse_event for forwarding to Nori.
+
+    While a user-initiated stream is active (stream_active), that stream forwards
+    its own run, so RunStarted and content events are skipped to avoid
+    double-sending. RunCompleted is still handled: a background run can finish
+    while the user's prompt waits for the agent lock, and dropping its completion
+    would leave observer_turn_active stuck, so the next background run would get
+    no "working" status.
     """
-    # Skip forwarding if a user-initiated stream is active — that stream
-    # handles its own forwarding and we don't want to double-send.
-    if state.stream_active:
+    if state.stream_active and event_type != "RunCompletedEvent":
         return
 
     try:
