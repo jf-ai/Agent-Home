@@ -390,7 +390,7 @@ def tool_call(
 ) -> dict[str, Any]:
     """Build a ToolCall update for tool invocation start."""
     raw_input = _parse_tool_args(args)
-    return session_update(session_id, _with_raw_input({
+    update = _with_raw_input({
         "sessionUpdate": "tool_call",
         "toolCallId": tool_call_id,
         "title": tool_name,
@@ -398,7 +398,8 @@ def tool_call(
         "status": "in_progress",
         "locations": _tool_locations(raw_input),
         "content": _invocation_content(tool_name, raw_input),
-    }, tool_name, raw_input))
+    }, tool_name, raw_input)
+    return session_update(session_id, update)
 
 
 def tool_call_update(
@@ -430,7 +431,7 @@ def tool_call_complete(
     content = _invocation_content(tool_name, raw_input) + _result_content(
         tool_name, result, status, raw_input
     )
-    return session_update(session_id, _with_raw_input({
+    update = _with_raw_input({
         "sessionUpdate": "tool_call",
         "toolCallId": tool_call_id,
         "title": tool_name,
@@ -439,7 +440,8 @@ def tool_call_complete(
         "rawOutput": _raw_output(tool_name, result, status) if result is not None else None,
         "locations": _tool_locations(raw_input),
         "content": content,
-    }, tool_name, raw_input))
+    }, tool_name, raw_input)
+    return session_update(session_id, update)
 
 
 def available_commands_update(session_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
