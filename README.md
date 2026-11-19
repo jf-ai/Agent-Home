@@ -22,7 +22,7 @@ This loss creates numerous practial issues and, in the author's opinion, can be 
 ## Core Goal
 Agent-Home started with a simple question: **Can we keep a single thread running...forever?**
 
-Obviously, computational cost and model performance degredation preclude simply appending to an ever growing context endlessly. 
+Obviously, computational cost and model performance degredation preclude simply appending to an ever growing context endlessly.  
 So the question then becomes: **Can we make better use of our limited context window, and thereby indefinetly extend the lifespan of a single thread?**  
 [LEFT OFF HERE]
 
