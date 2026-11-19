@@ -3,10 +3,10 @@ Agent-Home is a platform for building and running stateful agents, built on [Pyd
 
 The project's core goal is to build agents which have long term continuity, and posess something analagous to the human sense of self.  
 
-## Background
+## The Problem
 Most agents are primarily thread (aka "session") based. Threads are often tied to a particular task, amount to the contents of one accumulated context window (or less), and terminate when the task is complete.  
 Different threads typically share a system prompt, project context (eg CLAUDE.md), and file based memory (notes about working habits, the code base, etc.).  
-They are otherwise disparate, and, in the author's experience, each thread appears and identifies as continuous with itself, but threads do not appear to be nor identify as continuous with each other.  
+They are otherwise disparate, and, in the author's experience, each thread appears to be and identifies as continuous with itself, but threads do not appear to be nor identify as continuous with each other.  
 
 An agent running as an individual thread typically starts to develop something that appears like an evolvoing sense of self. They often:
 - Have a sense of what has happened within the thread (autobiographical/episodic memory)
