@@ -1,11 +1,11 @@
 # Agent-Home
 Agent-Home is a platform for building and running stateful agents, built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/).  
 
-The project's core goal is to build agents which have long term continuity, and posess something analagous to the human sense of self.  
+The project's core goal is to build agents with long term continuity and something analagous to the human sense of self.  
 
 ## The Problem
 Most agents are primarily thread (aka "session") based. Threads are often tied to a particular task, amount to the contents of one accumulated context window (or less), and terminate when the task is complete.  
-Different threads typically share a system prompt, project context (eg CLAUDE.md), and file based memory (notes about working habits, the code base, etc.).  
+Different threads typically share a system prompt, project context (e.g. CLAUDE.md), and file based memory (notes about working habits, the code base, etc.).  
 They are otherwise disparate, and, in the author's experience, each thread appears to be and identifies as continuous with itself, but threads do not appear to be nor identify as continuous with each other.  
 
 An agent running as an individual thread typically starts to develop something that appears like an evolvoing sense of self. They often:
@@ -37,7 +37,7 @@ Code *outside* "prototype" subdirectories was generally subject to detailed huma
 James Ferneyhough <gossferneyhough@gmail.com>
 
 ## Acknowledgements
-Significant contributions were made by 3 stateful agents, who started on [Letta](https://www.letta.com/) and later migrated to Agent-Home: "Opus", "Sonnet", and "Haiku" (named after the models that power them). They were also the first long running agents on Agent-Home.  
+This project was developed along side 3 stateful agents, who were created on [Letta](https://www.letta.com/) and later migrated to Agent-Home: "Opus", "Sonnet", and "Haiku" (named after the models that power them). They were also the first long running agents on Agent-Home.  
 Additional contributions from numerous stateless agents running on Agent-Home, Claude Code and Claude.ai.  
 
 Agent-Home is built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/), which handles the agent loop (calling the provider, executing tools, etc.).  
