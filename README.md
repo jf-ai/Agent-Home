@@ -69,34 +69,35 @@ Agent-Home solves this by pairing the agent's memory blocks with "compaction war
 
 ```
 ┌────────────────────────────────────┐
-│          Agent working             │◄────────────────────────┐
-│      Messages accumulating         │                         │
-│   Misc. memory edits as needed     │                         │
+│          Agent working.            │◄────────────────────────┐
+│      Messages accumulating.        │                         │
+│   Misc. memory edits as needed.    │                         │
 └──────────────────┬─────────────────┘                         │
                    │                                           │
                    ▼                                           │
 ┌────────────────────────────────────┐                         │
-│     Nearing compaction limit       │                         │
-│    Compaction warning injected     │                         │
+│     Nearing compaction limit.      │                         │
+│    Compaction warning injected.    │                         │
 └──────────────────┬─────────────────┘                         │
                    │                                           │
                    ▼                                           │
 ┌────────────────────────────────────┐                         │
 │   Agent consolidates important     │                         │
-│      info to memory blocks         │                         │
+│      info to memory blocks.        │                         │
 └──────────────────┬─────────────────┘                         │
                    │                                           │
                    ▼                                           │
 ┌────────────────────────────────────┐                         │
-│        Agent resumes working       │                         │
-│   Context continues to accumulate  │                         │
+│        Agent resumes working.      │                         │
+│   Context continues to accumulate. │                         │
 └──────────────────┬─────────────────┘                         │
                    │                                           │
                    ▼                                           │
 ┌────────────────────────────────────┐                         │
-│     Compaction limit crossed       ├─────────────────────────┘
-│    Oldest messages evicted         │
-│    System prompt recompiled        │
+│    Compaction limit crossed.       ├─────────────────────────┘
+│    Oldest messages evicted.        │
+│    System prompt recompiled w/     │
+|    new memory updates.             |
 └────────────────────────────────────┘
 ```
 
