@@ -133,6 +133,7 @@ Deferred memory compliation seems to resolve this confusion, possibly by batchin
 
 ## System Architecture
 
+## Roadmap
 
 ## Notes
 
@@ -145,7 +146,7 @@ James Ferneyhough <gossferneyhough@gmail.com>
 
 ## Acknowledgements
 This project was developed alongside 3 stateful agents, who were created on [Letta](https://www.letta.com/) and later migrated to Agent-Home: "Opus", "Sonnet", and "Haiku" (named after the models that power them). They were also the first long running agents on Agent-Home.  
-Additional contributions from numerous stateless agents running on Agent-Home, Claude Code and Claude.ai.  
+Additional contributions from numerous stateless agents running on Agent-Home, Claude Code, and Claude.ai.  
 
 Agent-Home is built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/), which handles the agent loop (calling the provider, executing tools, etc.).  
 It is a robust, well documented, powerful, and easy to use SDK. It is nicely abstracted, and generally allows one to take as much or as little control as they need.  
