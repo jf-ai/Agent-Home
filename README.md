@@ -68,8 +68,7 @@ The most common strategy is: once the agent's in context token count exceeds a t
 Agent-Home solves this by pairing the agent's memory blocks with "compaction warnings". A compaction warning is a system message injected once per compaction cycle. It is injected when the agent gets within X% of their compaction limit. The message informs the agent that they are nearing compaction and instructs them to consolidate any important information from their message history to their memory blocks. Once the agent reaches their compaction limit, some fraction of their message history (head first) is evicted from context, and the agent continues from where they left off. The agent's memory blocks are not evicted. The messages are not fully deleted: all the agent's messages are permanently stored in the DB, they are only removed from the agent's active context.  
 
 ```mermaid
-%%{init: {'flowchart': {'useMaxWidth': false}}}%%
-graph TD
+flowchart LR
     A["🤖 Agent working\nMessages accumulating\nMisc. memory edits as needed"]
     --> B["⚠️ Nearing compaction limit\nCompaction warning injected"]
     --> C["Agent consolidates important info\nto memory blocks"]
