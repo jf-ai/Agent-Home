@@ -67,14 +67,37 @@ The most common strategy is: once the agent's in context token count exceeds a t
 
 Agent-Home solves this by pairing the agent's memory blocks with "compaction warnings". A compaction warning is a system message injected once per compaction cycle. It is injected when the agent gets within X% of their compaction limit. The message informs the agent that they are nearing compaction and instructs them to consolidate any important information from their message history to their memory blocks. Once the agent reaches their compaction limit, some fraction of their message history (head first) is evicted from context, and the agent continues from where they left off. The agent's memory blocks are not evicted. The messages are not fully deleted: all the agent's messages are permanently stored in the DB, they are only removed from the agent's active context.  
 
-```mermaid
-flowchart TB
-    A["🤖 Agent working\nMessages accumulating\nMisc. memory edits as needed"]
-    --> B["⚠️ Nearing compaction limit\nCompaction warning injected"]
-    --> C["Agent consolidates important info\nto memory blocks"]
-    --> D["Agent resumes working\nContext continues to accumulate"]
-    --> E["Compaction limit crossed\nOldest messages evicted\nSystem prompt recompiled"]
-    --> A
+```
+┌────────────────────────────────────┐
+│          Agent working             │◄────────────────────────┐
+│      Messages accumulating         │                         │
+│   Misc. memory edits as needed     │                         │
+└──────────────────┬─────────────────┘                         │
+                   │                                           │
+                   ▼                                           │
+┌────────────────────────────────────┐                         │
+│     Nearing compaction limit       │                         │
+│    Compaction warning injected     │                         │
+└──────────────────┬─────────────────┘                         │
+                   │                                           │
+                   ▼                                           │
+┌────────────────────────────────────┐                         │
+│   Agent consolidates important     │                         │
+│      info to memory blocks         │                         │
+└──────────────────┬─────────────────┘                         │
+                   │                                           │
+                   ▼                                           │
+┌────────────────────────────────────┐                         │
+│        Agent resumes working       │                         │
+│   Context continues to accumulate  │                         │
+└──────────────────┬─────────────────┘                         │
+                   │                                           │
+                   ▼                                           │
+┌────────────────────────────────────┐                         │
+│     Compaction limit crossed       ├─────────────────────────┘
+│    Oldest messages evicted         │
+│    System prompt recompiled        │
+└────────────────────────────────────┘
 ```
 
 Importantly, this compaction technique is **summaryless**. Because the agent already consolidated important information from context in response to the compaction warning, no summary is required. The information that a summary would have been responsible for capturing has already been captured by the agent's memory block edits. The new memory content is **not replaced** at the next compaction cycle (unlike traditional compaction summaries), unless the agent explicitly chooses to use their memory tools to overwrite or remove the entry. Additionally, the agent has much more flexibility in how they organize key information to be carried forward. For example, consider a string of messages where the agent:
