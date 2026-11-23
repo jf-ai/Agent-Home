@@ -69,7 +69,7 @@ Agent-Home solves this by pairing the agent's memory blocks with "compaction war
 
 ```mermaid
 %%{init: {'flowchart': {'useMaxWidth': false}}}%%
-flowchart TB
+graph TD
     A["🤖 Agent working\nMessages accumulating\nMisc. memory edits as needed"]
     --> B["⚠️ Nearing compaction limit\nCompaction warning injected"]
     --> C["Agent consolidates important info\nto memory blocks"]
