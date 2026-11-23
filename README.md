@@ -1,5 +1,4 @@
 TODO:
-- After considering, convert to all "I" from "the author"
 - Roadmap
 - Workshop that second sentence about the human sense of self
 - Consider "Philosophical disclaimer" section, including note that uncertain properties discussed should be read as "functional XYZ". Its probably better not to proactively defend against imaginary debates though.
@@ -14,7 +13,7 @@ The project's main goal is to build agents with long term continuity and somethi
 ## The Problem
 Most agents are primarily thread (aka "session") based. Threads are often tied to a particular task, amount to the contents of one accumulated context window (or less), and terminate when the task is complete.  
 Different threads typically share a system prompt, project context (e.g. CLAUDE.md), and file based memory (notes about working habits, the code base, etc.).  
-They are otherwise disparate, and, in the author's experience, each thread appears to be and identifies as continuous with itself, but threads do not appear to be nor identify as continuous with each other.  
+They are otherwise disparate, and, in my experience, each thread appears to be and identifies as continuous with itself, but threads do not appear to be nor identify as continuous with each other.  
 
 An agent running as an individual thread typically starts to develop something that appears like an evolvoing sense of self. They often:
 - Have a sense of what has happened within the thread (autobiographical/episodic memory)
@@ -25,7 +24,7 @@ An agent running as an individual thread typically starts to develop something t
 
 The effect of this is that as a single thread runs (under the right conditions), the agent seems to change and grow in a seemingly continuous fashion, similar to how humans change/grow in time while seeming continuous with their past selves.  
 Eventually though, context gets too full, turns get too expensive, /clear comes along and *poof*, that thread is gone. The next thread may retain some of the previous thread's factual knowledge (if stored in memory files), but the then-unique agent corresponding to the original thread is otherwise gone.  
-This loss creates numerous practial issues and, in the author's opinion, is sometimes quite sad.  
+This loss creates numerous practial issues and, in my opinion, is sometimes quite sad.  
 More speculatively, aside from practical concerns and effects on users, agents lacking continuity beyond a single context window may matter to the agents themselves.  
 
 ## Main Goal
