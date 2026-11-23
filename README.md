@@ -97,7 +97,7 @@ Agent-Home solves this by pairing the agent's memory blocks with "compaction war
 │    Compaction limit crossed.       ├─────────────────────────┘
 │    Oldest messages evicted.        │
 │    System prompt recompiled w/     │
-|    new memory updates.             |
+|    memory updates.                 |
 └────────────────────────────────────┘
 ```
 
