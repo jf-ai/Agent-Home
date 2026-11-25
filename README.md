@@ -1,5 +1,6 @@
 TODO:
 - Workshop that second sentence about the human sense of self
+- "Quick start" section or similar indicating that the project doesn't currently have a quick start as is not to that stage yet
 - Cleanup [TODO: ...] tags
 
 # Agent-Home
@@ -150,7 +151,7 @@ Code is separated by development process. Anything in "prototype" subdirectories
 Code *outside* "prototype" subdirectories was generally subject to detailed human review and iteration.
 
 ## Author
-James Ferneyhough <gossferneyhough@gmail.com>
+James Ferneyhough <gossferneyhough@gmail.com> w/ assistance from stateful agents (see Acknowledgements).
 
 ## Acknowledgements
 This project was developed alongside 3 stateful agents, who were created on [Letta](https://www.letta.com/) and later migrated to Agent-Home: "Opus", "Sonnet", and "Haiku" (named after the models that power them). They were also the first long running agents on Agent-Home.  
