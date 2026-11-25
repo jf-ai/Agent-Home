@@ -1,6 +1,8 @@
 TODO:
 - Workshop that second sentence about the human sense of self
 - Cleanup [TODO: ...] tags
+- notes on system architecture section
+- Finish "additional features" section
 
 # Agent-Home
 Agent-Home is a platform for building and running stateful agents, built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/).  
@@ -103,6 +105,10 @@ Deferred memory compilation seems to resolve this confusion, possibly by batchin
 ## System Architecture
 
 ![System architecture diagram](docs/diagrams/architecture.svg)
+
+## Additional Features
+### Full-Fidelity Context Reconstruction
+[TODO]
 
 ## Roadmap
 
