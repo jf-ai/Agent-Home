@@ -1,0 +1,45 @@
+<mxfile host="65bd71144e">
+    <diagram name="Page-1" id="compaction-cycle">
+        <mxGraphModel dx="1450" dy="715" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="comp_1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Agent working.&lt;div&gt;Messages accumulating.&lt;/div&gt;&lt;div&gt;Misc. memory edits as needed.&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="90" width="280" x="285" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Nearing compaction limit.&lt;div&gt;Compaction warning injected.&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="90" width="280" x="285" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Agent consolidates important&lt;div&gt;info to memory blocks.&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="90" width="280" x="285" y="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Agent resumes working.&lt;div&gt;Context continues to accumulate.&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="90" width="280" x="285" y="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Compaction limit crossed.&lt;div&gt;Oldest messages evicted.&lt;/div&gt;&lt;div&gt;System prompt recompiled w/ memory updates.&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="100" width="280" x="285" y="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_12" edge="1" parent="1" source="comp_1" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="comp_2" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_23" edge="1" parent="1" source="comp_2" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="comp_3" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_34" edge="1" parent="1" source="comp_3" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="comp_4" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_45" edge="1" parent="1" source="comp_4" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="comp_5" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_51" edge="1" parent="1" source="comp_5" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="comp_1" value="">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="640" y="650"/>
+                            <mxPoint x="640" y="85"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
