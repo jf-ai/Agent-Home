@@ -39,13 +39,13 @@
                 <mxCell id="u-vEivz7DMqdrewxObFp-4" parent="core" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;fontColor=#ffffff;" value="&lt;b&gt;Inter-Agent&amp;nbsp;&lt;/b&gt;&lt;div&gt;&lt;b&gt;Communication&lt;/b&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry height="60" width="160" x="305" y="180" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_nori" edge="1" parent="1" source="nori" style="endArrow=classic;startArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.1429;entryY=0;entryDx=0;entryDy=0;strokeColor=#cccccc;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" target="core" value="&lt;b&gt;ACP&lt;/b&gt;&lt;div&gt;&lt;font style=&quot;font-size: 8px; color: rgb(192, 192, 192);&quot;&gt;HTTP to ACP Bridge&lt;/font&gt;&lt;/div&gt;">
+                <mxCell id="edge_nori" edge="1" parent="1" source="nori" style="endArrow=classic;startArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.1429;entryY=0;entryDx=0;entryDy=0;strokeColor=#cccccc;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" target="core" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;ACP&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 8px; color: rgb(192, 192, 192);&quot;&gt;HTTP to ACP Bridge&lt;/font&gt;&lt;/div&gt;">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_mgmt" edge="1" parent="1" source="mgmt" style="endArrow=classic;startArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#cccccc;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" target="core" value="&lt;b&gt;HTTP + SSE&lt;/b&gt;">
+                <mxCell id="edge_mgmt" edge="1" parent="1" source="mgmt" style="endArrow=classic;startArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#cccccc;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" target="core" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;HTTP + SSE&lt;/b&gt;&lt;/font&gt;">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_misc" edge="1" parent="1" source="misc" style="endArrow=classic;startArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.8571;entryY=0;entryDx=0;entryDy=0;strokeColor=#cccccc;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" target="core" value="&lt;b&gt;HTTP | ACP&lt;/b&gt;">
+                <mxCell id="edge_misc" edge="1" parent="1" source="misc" style="endArrow=classic;startArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.8571;entryY=0;entryDx=0;entryDy=0;strokeColor=#cccccc;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" target="core" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;HTTP | ACP&lt;/b&gt;&lt;/font&gt;">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="env_sandbox" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;container=1;collapsible=0;fontStyle=1;fillColor=none;strokeColor=#cccccc;fontColor=#ffffff;" value="Sandbox Environment" vertex="1">
@@ -81,7 +81,7 @@
                         <mxPoint x="425" y="600" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="tmwj_a81nvo3tIoz7cUC-8" connectable="0" parent="tmwj_a81nvo3tIoz7cUC-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=fontFamily,fontSize,fontStyle,textOpacity,labelBorderWidth,defaultLabelBackgroundColor,labelPadding;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" value="&lt;b&gt;MCP&lt;/b&gt;&amp;nbsp;&lt;div&gt;&lt;font style=&quot;font-size: 8px; color: rgb(192, 192, 192);&quot;&gt;FastMCP w/ HTTP transport&lt;/font&gt;&lt;/div&gt;" vertex="1">
+                <mxCell id="tmwj_a81nvo3tIoz7cUC-8" connectable="0" parent="tmwj_a81nvo3tIoz7cUC-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=fontFamily,fontSize,fontStyle,textOpacity,labelBorderWidth,defaultLabelBackgroundColor,labelPadding;fillColor=#0d1117;labelBackgroundColor=#0d1117;labelBorderColor=#0d1117;" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;MCP&lt;/b&gt;&lt;/font&gt;&amp;nbsp;&lt;div&gt;&lt;font style=&quot;font-size: 8px; color: rgb(192, 192, 192);&quot;&gt;FastMCP w/ HTTP transport&lt;/font&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry relative="1" x="0.2147" y="-1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>
