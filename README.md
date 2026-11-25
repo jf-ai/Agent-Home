@@ -1,5 +1,4 @@
 TODO:
-- Roadmap
 - Workshop that second sentence about the human sense of self
 - Consider "Philosophical disclaimer" section, including note that uncertain properties discussed should be read as "functional XYZ". Its probably better not to proactively defend against imaginary debates though.
 - Cleanup [TODO: ...] tags
