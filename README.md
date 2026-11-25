@@ -81,7 +81,7 @@ With Agent-Home's compaction system, in response to a compaction warning the age
 - 3 to `human`
 - 4 to `autobiography`
 
-All this new content would persist in the agent's context until explicitly removed by the agent during normal operation or a memory cleanup [TODO: point to notes on memory cleanups]
+All this new content would persist in the agent's context until explicitly removed by the agent during normal operation or a memory cleanup (see **Automated Memory Cleanup Process** in **Roadmap**).
 
 #### Deferred Memory Compilation
 [TODO: Candidate for compression or moving to different docs]
@@ -115,10 +115,36 @@ I want to complete Agentic Compaction before I prioritize getting the project in
 If you would like to experiment with the platform before then, please contact me at <gossferneyhough@gmail.com> and I will gladly help you get set up.  
 
 ### File Based Extended Memory
-[TODO:]
+The current core memory architecture has all the memory blocks loaded all the time. If agents need to write detailed memories, they can create (and later read) files in their sandbox/workspace, but have no way to persistently attach/detach such memories.  
+The memory block editing w/ special tools can also be clunky compared to bash + normal file editing tools.  
+
+This could be resolved by exposing the agent's memories to them as files in a directory, editable w/ a typical coding tool interface. However, two main points will complicate the implementation:
+- Memories are intentionally *not* stored in the agent's sandbox/normal workspace, where they would be less controlled and exposed to other agents
+- The modular system architecture tries to avoid making assumptions about the details of the MCP attached coding tools
+
+Some creativity will be required to design around these issues.
+
+Letta already has a related memory architecture called [MemFS](https://docs.letta.com/concepts/memfs)
+
+### Automated Memory Cleanup Process
+Memory cleanups are currently only semi-automatic: the user must run a script on the host to initiate and control the process. This needs to be fully automated. It will likely be easier to do so after **File Based Extended Memory** is implemented.
 
 ### Automatic Recall
-[TODO:]
+Agent-Home leans hard on in-context memory. In-context memory is powerful because LLMs generally have **very** good recall over and ability to make connections with content that is in-context.  
+The problem, of course, is that context is finite, and you must pay for in-context memories on every turn.  
+Paging systems (like file based memories which can be loaded, or knowledge graphs the agent can search) give agents access to far more memories than could fit in context, but creates a new problem: **agents don't know what they don't know**, 
+and often won't know that there is a relevant detail in a memory file a search away. Always in-context indices/summaries of out-of-context memories can help with this, but cannot communicate *all* the possibly relevant info in the associated memory.  
+
+If you introspect, you may notice that the human memory system doesn't work like this. It doesn't require that you:
+- Remember all your memories all at once
+- Magically know there is a relevant memory you don't currently know about, and then activelly recall it
+Instead, memories relevant to the current moment often seem to just appear in your mind. Presumably, there is some subconsious system(s) that "knows about" all of your memories, and surfaces memories relevant to your current situation.  
+
+I believe stateful agents would benefit greatly from a system similar to my hypothesized one, one that:
+- Has some "awareness"/access to an agent's full history in detail
+- Considering current context, can surface relevant memories from said history
+
+This is less of a planned feature and more of a research direction.
 
 ## Notes
 
