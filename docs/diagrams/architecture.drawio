@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram name="Page-1" id="architecture">
-        <mxGraphModel dx="1450" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1004" dy="495" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -27,26 +27,17 @@
                 <mxCell id="u-vEivz7DMqdrewxObFp-5" edge="1" parent="core" source="agent_loop" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="u-vEivz7DMqdrewxObFp-4">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="agent_loop" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="Agent Loop" vertex="1">
+                <mxCell id="agent_loop" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Agent Loop&lt;/b&gt;&lt;div&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;Pydantic AI&lt;/font&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry height="60" width="160" x="305" y="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="memory" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="Memory System" vertex="1">
+                <mxCell id="memory" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Memory System&lt;/b&gt;" vertex="1">
                     <mxGeometry height="60" width="160" x="30" y="180" as="geometry"/>
                 </mxCell>
-                <mxCell id="history" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="Message History" vertex="1">
+                <mxCell id="history" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Message History&lt;/b&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;Inc. Tool Calls&lt;/font&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry height="60" width="160" x="580" y="180" as="geometry"/>
                 </mxCell>
-                <mxCell id="u-vEivz7DMqdrewxObFp-4" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="Inter-Agent&amp;nbsp;&lt;div&gt;Communication&lt;/div&gt;" vertex="1">
+                <mxCell id="u-vEivz7DMqdrewxObFp-4" parent="core" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Inter-Agent&amp;nbsp;&lt;/b&gt;&lt;div&gt;&lt;b&gt;Communication&lt;/b&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry height="60" width="160" x="305" y="180" as="geometry"/>
-                </mxCell>
-                <mxCell id="fs" parent="1" style="swimlane;fontStyle=1;startSize=30;" value="Filesystem / Bash Tools  (MCP server)" vertex="1">
-                    <mxGeometry height="160" width="500" x="175" y="530" as="geometry"/>
-                </mxCell>
-                <mxCell id="sandboxed" parent="fs" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Sandboxed&lt;/b&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;container&lt;/font&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="60" width="160" x="50" y="65" as="geometry"/>
-                </mxCell>
-                <mxCell id="hostside" parent="fs" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Host-side&lt;/b&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;direct&lt;/font&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="60" width="160" x="290" y="65" as="geometry"/>
                 </mxCell>
                 <mxCell id="edge_nori" edge="1" parent="1" source="nori" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="core" value="ACP">
                     <mxGeometry relative="1" as="geometry"/>
@@ -57,8 +48,19 @@
                 <mxCell id="edge_misc" edge="1" parent="1" source="misc" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" target="core" value="HTTP | ACP">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="edge_fs" edge="1" parent="1" source="core" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" target="fs" value="MCP (isolated)">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="tmwj_a81nvo3tIoz7cUC-7" edge="1" parent="1" source="core" style="edgeStyle=elbowEdgeStyle;html=1;endArrow=none;endFill=0;startArrow=classic;startFill=1;elbow=vertical;" target="tmwj_a81nvo3tIoz7cUC-5" value="">
+                    <mxGeometry relative="1" x="0.8333" as="geometry">
+                        <mxPoint x="425" y="480" as="sourcePoint"/>
+                        <mxPoint x="425" y="600" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tmwj_a81nvo3tIoz7cUC-8" connectable="0" parent="tmwj_a81nvo3tIoz7cUC-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;" value="&lt;b&gt;MCP&lt;/b&gt;&amp;nbsp;&lt;div&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;FastMCP&lt;/font&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry relative="1" x="0.2147" y="-1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tmwj_a81nvo3tIoz7cUC-5" parent="1" style="shape=waypoint;sketch=0;size=6;pointerEvents=1;points=[];fillColor=default;resizable=0;rotatable=0;perimeter=centerPerimeter;snapToPoint=1;fontSize=14;fontStyle=1;startSize=30;" value="" vertex="1">
+                    <mxGeometry height="20" width="20" x="415" y="530" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
