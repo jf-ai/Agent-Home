@@ -131,8 +131,57 @@ Deferred memory compliation seems to resolve this confusion, possibly by batchin
 [Credit to Letta for the original Deferred Memory Compilation idea](https://github.com/letta-ai/letta/commit/d7793a44742f5baba00ac5ea910101dcf9d34543)
 
 ## System Architecture
+```
+┌──────────┐            ┌────────────────────┐            ┌─────────────────┐
+│ Nori TUI │            │ Management Console │            │ Misc Interfaces │
+└─────┬────┘            └─────────┬──────────┘            └────────┬────────┘
+      │                           │                                │
+      └─────────────────────────┐ │ ┌──────────────────────────────┘
+                                │ │ │
+                                │ │ │                         Core Server
+                         ┏╍╍╍╍╍╍│╍│╍│╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┓
+                         ╏      │ │ │                                                                         ╏
+                         ╏      ▼ ▼ ▼                                                                         ╏
+                         ╏  ┌────────────┐                  ┌───────────────┐            ┌─────────────────┐  ╏
+                         ╏  │ Agent Loop │─────────────────►│ Memory System │            │ Message History │  ╏
+                         ╏  └───┬─┬─┬────┘                  └───────────────┘            └─────────────────┘  ╏
+                         ╏      │ │ │                                                             ▲           ╏
+                         ╏      │ │ │                                                             │           ╏
+                         ╏      │ │ └─────────────────────────────────────────────────────────────┘           ╏
+                         ╏      │ │                                                                           ╏
+                         ┗╍╍╍╍╍╍│╍│╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┛
+                                │ │
+                      ┌─────────┘ └────────────┐
+                      │                        │
+                      │    Filesystem Tools    │
+             ┏╍╍╍╍╍╍╍╍│╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍│╍╍╍╍╍╍╍╍┓
+             ╏        │                        │        ╏
+             ╏        ▼                        ▼        ╏
+             ╏  ┌───────────┐            ┌───────────┐  ╏
+             ╏  │ Sandboxed │            │ Host-side │  ╏
+             ╏  └───────────┘            └───────────┘  ╏
+             ╏                                          ╏
+             ╏                                          ╏
+             ┗╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍┛
+```
 
 ## Roadmap
+
+### Next milestone: Agentic Compaction  
+Agent-Home currently compacts context on a fixed threshold. But the right compaction behavior can depend on what the agent is doing, and a single threshold can't adapt to that.  
+**Agentic Compaction** is a planned feature intended to improve the compaction system's responsiveness to current conditions. It is one of the planned features I am most excited about.
+Targeting Q1 2027 for completion.  
+
+### Ease of Setup
+There is currently no installer script for Agent-Home, and the setup is not very user friendly. At the moment, it would not be easy for anyone other than me to deploy it as intended.  
+I want to complete Agentic Compaction before I prioritize getting the project in front of people, so once that is done, I will work to make setup user friendly.  
+If you would like to experiment with the platform before then, please contact me at <gossferneyhough@gmail.com> and I will gladly help you get set up.  
+
+### File Based Extended Memory
+[TODO:]
+
+### Automatic Recall
+[TODO:]
 
 ## Notes
 
