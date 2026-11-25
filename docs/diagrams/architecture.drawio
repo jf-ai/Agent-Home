@@ -1,0 +1,72 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.5 Chrome/138.0.7204.251 Electron/37.6.1 Safari/537.36">
+  <diagram name="Page-1" id="j_uGtvCKPB2pwQvg7ztQ">
+    <mxGraphModel dx="1414" dy="797" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="_3riUySnH7oqIIess20I-1" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Agent Core Server&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font&gt;Message history&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font&gt;LLM request&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font&gt;Agent loop&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font&gt;Memory tool execution&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font&gt;Memory store&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font&gt;Context management&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="150" x="190" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-3" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="File system tools Env 1" vertex="1">
+          <mxGeometry height="80" width="80" x="90" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-5" edge="1" parent="1" source="_3riUySnH7oqIIess20I-1" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="_3riUySnH7oqIIess20I-3" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="600" />
+            </Array>
+            <mxPoint x="225" y="560" as="sourcePoint" />
+            <mxPoint x="90" y="660" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-9" connectable="0" parent="_3riUySnH7oqIIess20I-5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="MCP" vertex="1">
+          <mxGeometry relative="1" x="0.0503" y="-4" as="geometry">
+            <mxPoint x="-33" y="28" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-6" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="Mobile chat apps" vertex="1">
+          <mxGeometry height="80" width="80" x="320" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-7" edge="1" parent="1" source="_3riUySnH7oqIIess20I-1" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="_3riUySnH7oqIIess20I-6" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="480" y="600" as="sourcePoint" />
+            <mxPoint x="530" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-8" connectable="0" parent="_3riUySnH7oqIIess20I-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="MCP" vertex="1">
+          <mxGeometry relative="1" x="-0.04" y="4" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-10" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="File system tools Env 2" vertex="1">
+          <mxGeometry height="80" width="80" x="190" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-11" edge="1" parent="1" source="_3riUySnH7oqIIess20I-1" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="_3riUySnH7oqIIess20I-10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="480" y="600" as="sourcePoint" />
+            <mxPoint x="530" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-12" connectable="0" parent="_3riUySnH7oqIIess20I-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="MCP" vertex="1">
+          <mxGeometry relative="1" x="0.0535" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-13" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="&lt;b&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;Management TUI (or GUI)&lt;/font&gt;&lt;/b&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;Message agent&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;Agent CRUD&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;Attach/detach MCP servers&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;View current agent activity&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;Memory block management&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;(May want to split some management activity out from a more lean claude code style TUI)&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;&lt;b&gt;Critically, always displays current agent status regardless of what environment they&#39;re operating&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="220.62" width="220.62" x="490" y="364.69" as="geometry" />
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-15" edge="1" parent="1" source="_3riUySnH7oqIIess20I-1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="_3riUySnH7oqIIess20I-13" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="360" y="470" as="sourcePoint" />
+            <mxPoint x="410" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_3riUySnH7oqIIess20I-16" connectable="0" parent="_3riUySnH7oqIIess20I-15" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="HTTP&lt;div&gt;REST API&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0064" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
