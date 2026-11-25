@@ -1,12 +1,16 @@
 TODO:
 - Workshop that second sentence about the human sense of self
-- "Quick start" section or similar indicating that the project doesn't currently have a quick start as is not to that stage yet
 - Cleanup [TODO: ...] tags
 
 # Agent-Home
 Agent-Home is a platform for building and running stateful agents, built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/).  
 
 The project's main goal is to build agents with long term continuity and something analogous to the human sense of self.  
+
+## Getting Started
+Agent-Home doesn't yet have a user-friendly setup. There is no installer, and getting it running takes some work. After finishing a few more key features (see **Roadmap**), I plan to make an installer script and easy setup process.  
+In the meantime: If you would like to try out the platform, please [contact me]<gossferneyhough@gmail.com> and I will happily help you get set up.  
+Otherwise, stay tuned. I hope to have a user-friendly setup in the next few months.  
 
 ## The Problem
 Most agents are primarily thread (aka "session") based. Threads are often tied to a particular task, amount to the contents of one accumulated context window (or less), and terminate when the task is complete.  
