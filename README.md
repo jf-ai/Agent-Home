@@ -88,17 +88,13 @@ With Agent-Home's compaction system, in response to a compaction warning the age
 All this new content would persist in the agent's context until explicitly removed by the agent during normal operation or a memory cleanup (see **Automated Memory Cleanup Process** in **Roadmap**).
 
 #### Deferred Memory Compilation
-[TODO: Candidate for compression or moving to different docs]
-Memory edits are not immediately reflected in the memory blocks in the agent's context. Instead, the edits are written to block records in the DB, but they are not used to update the memory blocks the agent sees immediately. Instead, the memory blocks remain "stale" until compaction occurs and messages are evicted. At this point, the system prompt is recompiled and all of the agent's memory edits up to then become visible to them. This technique is used for the following reasons:
-- Most importantly, since the memory blocks are in the system prompt, changes bust the cache. With deferred memory compilation, we get **only one cache bust per compaction cycle**, as opposed to one per tool call if the system prompt were recompiled immediately.  
-  Additionally, the cache bust occurs when the content past the invalidation point (which represents the uncached input you must pay for) is the **shortest it can be** within a compaction cycle, as this content is only what remained after message eviction.
-- Recompiling only at compaction does **not** cause a gap in information availability to the agent. Up until compaction, the agent doesn't need the memory they wrote to be in their system prompt, as both the original content the memory was based on and the memory edit tool call are still in the agent's context. It is only at the compaction event that this information may otherwise be lost, which is exactly when it becomes available to the agent in their system prompt.
-[TODO: below point is probably too long]
-- In my experience, agents often get confused when their memory blocks immediately reflect a change they just made to them with a memory tool. My hypothesis as to why this happens is:  
-Although LLMs do not "read" their context from start to finish, agents often behave as though they interpret their context as an unfolding series of events which are fixed once they occur (IE events earlier in context are "the past"). This view is usually accurate, but falls apart with a dynamic system prompt. As such, when they see:  
-[System prompt with memory edit A] -> [intermediate context] -> [Tool call that caused memory edit A]  
-they will often believe that memory edit A was in the system *before* the tool call that they just issued to write it (because it appears before it in context), and therefore conclude their edit was a duplicate.  
-Deferred memory compilation seems to resolve this confusion, possibly by batching the changes, and by having the changes to the system prompt occur when the agent didn't *just* make the associated edit.
+
+Memory edits are written to the DB but not immediately reflected in the agent's context. The blocks remain "stale" until compaction, at which point the system prompt is recompiled and all edits become visible. 
+This technique is known as **Deferred Memory Compilation** and has the following critical properties:
+
+- **Only one cache bust per cycle.** Memory blocks live in the system prompt, so any change busts almost the whole cache. Deferring recompilation to after compaction means only one bust per compaction cycle, and it happens when the context is at its shortest (since compaction just fired). Without deferring, there is one cache bust *per memory edit*, which can happen dozens of times or more during a compaction cycle.
+- **No redundant information or gap in availability.** Until compaction, the agent doesn't need recent memory edits in their system prompt; the original content the memory was based on and the tool call that wrote said memory are both still in context. The recompilation occurs exactly when that information may otherwise be lost to compaction.
+- **Avoids agent confusion.** In my experience, agents tend to interpret their context as a linear timeline. Immediate updates create a confusing ordering where the updated system prompt appears *before* the tool call that caused it, sometimes leading agents to conclude their edit was a duplicate. Deferring seems to eliminate this.  
 
 [Credit to Letta for the original Deferred Memory Compilation idea](https://github.com/letta-ai/letta/commit/d7793a44742f5baba00ac5ea910101dcf9d34543)
 
