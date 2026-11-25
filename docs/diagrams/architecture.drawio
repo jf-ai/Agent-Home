@@ -81,7 +81,7 @@
                         <mxPoint x="425" y="600" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="tmwj_a81nvo3tIoz7cUC-8" connectable="0" parent="tmwj_a81nvo3tIoz7cUC-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontColor=#ffffff;" value="&lt;b&gt;MCP&lt;/b&gt;&amp;nbsp;&lt;div&gt;&lt;font style=&quot;font-size: 8px; color: rgb(192, 192, 192);&quot;&gt;FastMCP w/ HTTP transport&lt;/font&gt;&lt;/div&gt;" vertex="1">
+                <mxCell id="tmwj_a81nvo3tIoz7cUC-8" connectable="0" parent="tmwj_a81nvo3tIoz7cUC-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontColor=#ffffff;fillColor=none;" value="&lt;b&gt;MCP&lt;/b&gt;&amp;nbsp;&lt;div&gt;&lt;font style=&quot;font-size: 8px; color: rgb(192, 192, 192);&quot;&gt;FastMCP w/ HTTP transport&lt;/font&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry relative="1" x="0.2147" y="-1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>
