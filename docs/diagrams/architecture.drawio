@@ -7,7 +7,7 @@
                 <mxCell id="nori" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Nori TUI&lt;/b&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(192, 192, 192); font-size: x-small;&quot;&gt;or any ACP client&lt;/span&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry height="60" width="180" x="60" y="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="mgmt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Management Console&lt;/b&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(192, 192, 192); font-size: x-small;&quot;&gt;Agent CRUD, etc.&lt;/span&gt;&lt;/div&gt;" vertex="1">
+                <mxCell id="mgmt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Management CLI&lt;/b&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(192, 192, 192); font-size: x-small;&quot;&gt;Agent CRUD, etc.&lt;/span&gt;&lt;/div&gt;" vertex="1">
                     <mxGeometry height="60" width="180" x="335" y="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="misc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="&lt;b&gt;Misc Interfaces&lt;/b&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(192, 192, 192); font-size: x-small;&quot;&gt;Telegram, etc.&lt;/span&gt;&lt;/div&gt;" vertex="1">
