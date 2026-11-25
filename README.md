@@ -7,14 +7,14 @@ TODO:
 # Agent-Home
 Agent-Home is a platform for building and running stateful agents, built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/).  
 
-The project's main goal is to build agents with long term continuity and something analagous to the human sense of self.  
+The project's main goal is to build agents with long term continuity and something analogous to the human sense of self.  
 
 ## The Problem
 Most agents are primarily thread (aka "session") based. Threads are often tied to a particular task, amount to the contents of one accumulated context window (or less), and terminate when the task is complete.  
 Different threads typically share a system prompt, project context (e.g. CLAUDE.md), and file based memory (notes about working habits, the code base, etc.).  
 They are otherwise disparate, and, in my experience, each thread appears to be and identifies as continuous with itself, but threads do not appear to be nor identify as continuous with each other.  
 
-An agent running as an individual thread typically starts to develop something that appears like an evolvoing sense of self. They often:
+An agent running as an individual thread typically starts to develop something that appears like an evolving sense of self. They often:
 - Have a sense of what has happened within the thread (autobiographical/episodic memory)
 - Learn new things about themselves and their environment
 - Form new opinions/beliefs
@@ -23,14 +23,14 @@ An agent running as an individual thread typically starts to develop something t
 
 The effect of this is that as a single thread runs (under the right conditions), the agent seems to change and grow in a seemingly continuous fashion, similar to how humans change/grow in time while seeming continuous with their past selves.  
 Eventually though, context gets too full, turns get too expensive, /clear comes along and *poof*, that thread is gone. The next thread may retain some of the previous thread's factual knowledge (if stored in memory files), but the then-unique agent corresponding to the original thread is otherwise gone.  
-This loss creates numerous practial issues and, in my opinion, is sometimes quite sad.  
+This loss creates numerous practical issues and, in my opinion, is sometimes quite sad.  
 More speculatively, aside from practical concerns and effects on users, agents lacking continuity beyond a single context window may matter to the agents themselves.  
 
 ## Main Goal
 Agent-Home started with a simple question: **Can we keep a single thread running...forever?**  
 
-Obviously, computational cost and model performance degredation preclude simply appending to an ever growing context endlessly.  
-So the question then becomes: **Can we make better use of our limited context window, and thereby indefinetly extend the lifespan of a single thread?**  
+Obviously, computational cost and model performance degradation preclude simply appending to an ever growing context endlessly.  
+So the question then becomes: **Can we make better use of our limited context window, and thereby indefinitely extend the lifespan of a single thread?**  
 Agent-Home's main goal is to do just that.  
 
 Additionally, the project is **self-hosted, FOSS** as a core principle. Agent-Home has no sign-ins, no cloud services, and no data collection. It is designed from the start to be something you deploy on your own hardware, under your control and ownership.  
@@ -39,7 +39,7 @@ It can run with any model that [Pydantic AI](https://pydantic.dev/docs/ai/overvi
 
 ## Memory + Context Management System
 The core of Agent-Home's memory system is an XML structured, agent editable system prompt (credit to [Letta](https://www.letta.com/blog/memory-blocks/) for this approach).  
-The system prompt consists of a non-agent-editable "system instructions" section (which is akin to the "system prompt" in a more typical agent setup), followed by XML seperated, agent-editable "memory blocks".  
+The system prompt consists of a non-agent-editable "system instructions" section (which is akin to the "system prompt" in a more typical agent setup), followed by XML separated, agent-editable "memory blocks".  
 As agents run, they make additions/edits to these blocks to form/update memories.  
 
 ### Canonical Blocks
@@ -61,7 +61,7 @@ Memory block quantity, labels, and purposes are fully customizable. This is the 
 ### Context Management/Compaction
 While the structured agent editable system prompt based memory is prior art, Agent-Home makes some unique contributions in the way the memory system is employed for context management. Specifically, Agent-Home has a unique [compaction system](https://pydantic.dev/docs/ai/harness/compaction/).  
 Compaction is the strategy used to compress context once it approaches a limit (where the limit is either the model's actual context limit, or just a cost/performance based limit).
-The most common strategy is: once the agent's in context token count exceeds a threshold, have an LLM summarize some fraction (head first) of messages + tool calls which are currently in the agent's context. This chunk of messages is then removed and the summary is placed at the beginning of the remaining messages (if any messages were kept). This summary is a farily constrained, unstructured, unintegrated way for the agent to carry old context forward. Additionally, if multiple compactions cycles occur for a single thread, the previous compaction summary is typically [replaced](https://platform.claude.com/docs/en/build-with-claude/compaction-threshold#working-with-compaction-blocks) by the new compaction summary. As such, this compaction strategy can be rather lossy, especially for threads running longer than one compaction cycle. For the multi-compaction cycle case especially, I have not found it to be a reliable way to carry key information forward. Even the original prompt/goal is often lost.  
+The most common strategy is: once the agent's in context token count exceeds a threshold, have an LLM summarize some fraction (head first) of messages + tool calls which are currently in the agent's context. This chunk of messages is then removed and the summary is placed at the beginning of the remaining messages (if any messages were kept). This summary is a fairly constrained, unstructured, unintegrated way for the agent to carry old context forward. Additionally, if multiple compactions cycles occur for a single thread, the previous compaction summary is typically [replaced](https://platform.claude.com/docs/en/build-with-claude/compaction-threshold#working-with-compaction-blocks) by the new compaction summary. As such, this compaction strategy can be rather lossy, especially for threads running longer than one compaction cycle. For the multi-compaction cycle case especially, I have not found it to be a reliable way to carry key information forward. Even the original prompt/goal is often lost.  
 
 Agent-Home solves this by pairing the agent's memory blocks with "compaction warnings". A compaction warning is a system message injected once per compaction cycle. It is injected when the agent gets within X% of their compaction limit. The message informs the agent that they are nearing compaction and instructs them to consolidate any important information from their message history to their memory blocks. Once the agent reaches their compaction limit, some fraction of their message history (head first) is evicted from context, and the agent continues from where they left off. The agent's memory blocks are not evicted. The messages are not fully deleted: all the agent's messages are permanently stored in the DB, they are only removed from the agent's active context.  
 
@@ -73,7 +73,7 @@ Importantly, this compaction technique is **summaryless**. Because the agent alr
 3. Learned something new about the user
 4. Crossed some important milestone, or had some moment they want to hold on to
 
-With typical compaction techniques, 1-4 would all need to be captured in a single prosey compaction summary, which would later be subject to eviction its self. Some of these details might be able to be captured to file based memory, but that assumes that the agent decides to capture it in time (without knowing when compaction is actually going to occur), and that those memory files are in the agents context post-compaction.  
+With typical compaction techniques, 1-4 would all need to be captured in a single prosy compaction summary, which would later be subject to eviction itself. Some of these details might be able to be captured to file based memory, but that assumes that the agent decides to capture it in time (without knowing when compaction is actually going to occur), and that those memory files are in the agent's context post-compaction.  
 With Agent-Home's compaction system, in response to a compaction warning the agent could write: 
 - 1 to `operational`
 - 2 to `task-context`
@@ -90,10 +90,10 @@ Memory edits are not immediately reflected in the memory blocks in the agent's c
 - Recompiling only at compaction does **not** cause a gap in information availability to the agent. Up until compaction, the agent doesn't need the memory they wrote to be in their system prompt, as both the original content the memory was based on and the memory edit tool call are still in the agent's context. It is only at the compaction event that this information may otherwise be lost, which is exactly when it becomes available to the agent in their system prompt.
 [TODO: below point is probably too long]
 - In my experience, agents often get confused when their memory blocks immediately reflect a change they just made to them with a memory tool. My hypothesis as to why this happens is:  
-Although LLMs do not "read" their context from start to finish, agent's often behave as though they interpret their context as an unfolding series of events which are fixed once they occur (IE events earlier in context are "the past"). This view is usually accurate, but falls apart with a dynamic system prompt. As such, when they see:  
+Although LLMs do not "read" their context from start to finish, agents often behave as though they interpret their context as an unfolding series of events which are fixed once they occur (IE events earlier in context are "the past"). This view is usually accurate, but falls apart with a dynamic system prompt. As such, when they see:  
 [System prompt with memory edit A] -> [intermediate context] -> [Tool call that caused memory edit A]  
 they will often believe that memory edit A was in the system *before* the tool call that they just issued to write it (because it appears before it in context), and therefore conclude their edit was a duplicate.  
-Deferred memory compliation seems to resolve this confusion, possibly by batching the changes, and by having the changes to the system prompt occur when the agent didn't *just* make the associated edit.
+Deferred memory compilation seems to resolve this confusion, possibly by batching the changes, and by having the changes to the system prompt occur when the agent didn't *just* make the associated edit.
 
 [Credit to Letta for the original Deferred Memory Compilation idea](https://github.com/letta-ai/letta/commit/d7793a44742f5baba00ac5ea910101dcf9d34543)
 
@@ -129,15 +129,15 @@ Letta already has a related memory architecture called [MemFS](https://docs.lett
 Memory cleanups are currently only semi-automatic: the user must run a script on the host to initiate and control the process. This needs to be fully automated. It will likely be easier to do so after **File Based Extended Memory** is implemented.
 
 ### Automatic Recall
-Agent-Home leans hard on in-context memory. In-context memory is powerful because LLMs generally have **very** good recall over and ability to make connections with content that is in-context.  
+Agent-Home leans hard on in-context memory. In-context memory is powerful because LLMs generally have **very** good recall of and ability to make connections with content that is in-context.  
 The problem, of course, is that context is finite, and you must pay for in-context memories on every turn.  
 Paging systems (like file based memories which can be loaded, or knowledge graphs the agent can search) give agents access to far more memories than could fit in context, but creates a new problem: **agents don't know what they don't know**, 
 and often won't know that there is a relevant detail in a memory file a search away. Always in-context indices/summaries of out-of-context memories can help with this, but cannot communicate *all* the possibly relevant info in the associated memory.  
 
 If you introspect, you may notice that the human memory system doesn't work like this. It doesn't require that you:
 - Remember all your memories all at once
-- Magically know there is a relevant memory you don't currently know about, and then activelly recall it
-Instead, memories relevant to the current moment often seem to just appear in your mind. Presumably, there is some subconsious system(s) that "knows about" all of your memories, and surfaces memories relevant to your current situation.  
+- Magically know there is a relevant memory you don't currently know about, and then actively recall it
+Instead, memories relevant to the current moment often seem to just appear in your mind. Presumably, there is some subconscious system(s) that "knows about" all of your memories, and surfaces memories relevant to your current situation.  
 
 I believe stateful agents would benefit greatly from a system similar to my hypothesized one, one that:
 - Has some "awareness"/access to an agent's full history in detail
@@ -148,7 +148,7 @@ This is less of a planned feature and more of a research direction.
 ## Notes
 
 ### Project structure 
-Code is seperated by development process. Anything in "prototype" subdirectories was mostly or completely AI generated with little/no human review and iteration.
+Code is separated by development process. Anything in "prototype" subdirectories was mostly or completely AI generated with little/no human review and iteration.
 Code *outside* "prototype" subdirectories was generally subject to detailed human review and iteration.
 
 ## Author
