@@ -1,8 +1,6 @@
 TODO:
 - Workshop that second sentence about the human sense of self
-- Consider "Philosophical disclaimer" section, including note that uncertain properties discussed should be read as "functional XYZ". Its probably better not to proactively defend against imaginary debates though.
 - Cleanup [TODO: ...] tags
-- 
 
 # Agent-Home
 Agent-Home is a platform for building and running stateful agents, built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/).  
