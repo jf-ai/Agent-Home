@@ -130,7 +130,7 @@ While Agent-Home agents have some tools which execute on the server directly, su
 This includes basic coding tools (Read, Edit, Bash, etc.). The result of this is:
 - Flexibility of what tools you attach to your agents. A toolset does not need to be Pydantic AI native, it just needs to speak MCP.  
 - **Flexibility of agent work environment.** Not only are MCP toolsets modular and easy to swap, but you can also *locate* an MCP server in whatever env you like.  
-The second point was my main intent with this decision.
+  This point was the primary driver behind this decision.
 
 Most agent harnesses couple the UI, Agent Loop (core server in my case), and tool execution all together in one process. Prominent examples are Claude Code, Codex, and Opencode. That architecture *is* typically simpler to deploy, but it means when you need to launch one of the components in a particular environment, **you're forced to launch all 3 in said env.**  
 
