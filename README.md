@@ -133,7 +133,9 @@ This includes basic coding tools (Read, Edit, Bash, etc.). The result of this is
 The second point was my main intent with this decision.
 
 Most agent harnesses couple the UI, Agent Loop (core server in my case), and tool execution all together in one process. Prominent examples are Claude Code, Codex, and Opencode. That architecture *is* typically simpler to deploy, but it means when you need to launch one of the components in a particular environment, **you're forced to launch all 3 in said env.**  
+
 My best example of this causing problems is **sandboxing**. 95% of the time, I want my agents **coding tools** executing in a sandbox so I don't have to worry about permissions. With all-in-process, I then have to run *everything* in my sandbox. For stateless agents, this is a bit annoying for the UI (its nice to be able to launch and run UI bare on the host). But for stateful agents, the **Agent Loop** being in the sandbox too is a big problem, because now the agent state must also be in the sandbox. This means that message history, agent memories, and the agent loop process are **not** protected from the agent's actions in the sandbox. Additionally, if you want an agent to work in a different sandbox, or on the host, you must somehow transport/synchronize the state. There is also a lot more friction in general when changing work environments.  
+
 With Agent-Home's modular architecture, I can launch the server in a dedicated & isolated server container, launch the TUI directly from a host terminal window, start a sandbox container w/ an MCP server running inside it, and start work with the server safe from agent actions.  
 If I quickly need an agent to take some privaledged action on the host, I can simply swap** the agent to an MCP server running on the host. Same TUI window, same server, no transporting agent state.  
 
