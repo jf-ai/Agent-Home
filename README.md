@@ -11,7 +11,7 @@ The project's main goal is to build agents with long term continuity and somethi
 
 ## Getting Started
 Agent-Home doesn't yet have a user-friendly setup. There is no installer, and getting it running takes some work. After finishing a few more key features (see **Roadmap**), I plan to make an installer script and easy setup process.  
-In the meantime: If you would like to try out the platform, please [contact me](gossferneyhough@gmail.com) and I will happily help you get set up.  
+In the meantime: If you would like to try out the platform, please [contact me](mailto:gossferneyhough@gmail.com) and I will happily help you get set up.  
 Otherwise, stay tuned. I hope to have a user-friendly setup in the next few months.  
 
 **WARNING**: Currently, Agent-Home has no auth for the server API, and tools are **not gated by any permissions**. As such, the following **MUST** be true for it to be used safely:
