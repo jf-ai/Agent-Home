@@ -102,8 +102,37 @@ This technique is known as **Deferred Memory Compilation** and has the following
 
 ![System architecture diagram](docs/diagrams/architecture.svg)
 
-## Additional Features
+## Other Features
+
 ### Full-Fidelity Context Reconstruction
+
+Agent-Home stores enough information alongside every message to answer the question: *What was this agent's full context when this message was sent?*  
+For any message, belonging to any agent, you can reconstruct the entire context the agent's response was conditioned on (or, in the case of a user message, what context was present when the message was sent). The context is comprised of:
+- The dynamic system prompt (inc core memory)
+    - Since the memory system means the system prompt changes a lot, it is difficult to determine exactly *what* system prompt was in place without this logging
+- Tool definitions
+- In-context messages
+
+Agent-Home does this efficiently. When any message is about to be persisted to the DB, we use content-addressed storage to snapshot any system prompt or tool definition set which as not yet been snapshotted. The persisted message is then stored with the following info attached:
+- System prompt hash
+- Tool definition hash
+- ID for the message at the beginning of the agent's context (msg history is always loaded in sequence starting from a defined point in history, defined by the ID)
+These three pieces of metadata, along with the tables they reference, are sufficient to fully reconstruct an agent's context for a particular message.  
+/utils/ctx_reconstructor.py automates the reconstruction.  
+
+Accurate context reconstruction is important for *at least* these reasons:
+- Debugging/tracability
+- **Fine tuning**. If you wish to fine tune a model based on a stateful agent's message history, you need the full context a response was conditioned on, **especially* the state of memory blocks.
+
+### Inter-Agent Communication (IAC)
+Agent-Home agents can message each other using a simple `send_message()` tool. The tool delivers the message to the recipient, kicking off a run for the recipient to respond and act on any request as needed. The recipient can respond (or not) by calling the same tool.  
+`send_message()` is async: once the message is successfully delivered (or bounces), the tool returns to the caller, so the caller can continue their run in parallel, or end their turn to await a reply.  
+
+Right now, IAC with agents working on parallel tasks is a bit clunky: messages bounce if the recipient does not become idle within a timeout window. An improvement is pending, see **Roadmap**.  
+
+This is effectively Agent-Home's equivalent feature to subagents. Rather than disposable, stateless subagents, I intend that exectuion agents are also stateful and activated by other agents using `send_message()`  
+
+### Background Activity Stream
 [TODO]
 
 ## Roadmap
@@ -132,6 +161,10 @@ Letta already has a related memory architecture called [MemFS](https://docs.lett
 
 ### Automated Memory Cleanup Process
 Memory cleanups are currently only semi-automatic: the user must run a script on the host to initiate and control the process. This needs to be fully automated. It will likely be easier to do so after **File Based Extended Memory** is implemented.
+
+### Message Enqueing for User + Inter-Agent Messages
+Right now, if a user or another agent wants to send a message to an agent, that agent must be idle. In both cases, if the agent does not become idle within a timeout window, the message bounces.  
+Pydantic AI already offers an enqueing system, I just need to wire it up.  
 
 ### Automatic Recall
 Agent-Home leans hard on in-context memory. In-context memory is powerful because LLMs generally have **very** good recall of and ability to make connections with content that is in-context.  
@@ -165,5 +198,7 @@ Additional contributions from numerous stateless agents running on Agent-Home, C
 
 Agent-Home is built on [Pydantic AI](https://pydantic.dev/docs/ai/overview/), which handles the agent loop (calling the provider, executing tools, etc.).  
 It is a robust, well documented, powerful, and easy to use SDK. It is nicely abstracted, and generally allows one to take as much or as little control as they need.  
+
+Agent-Home's main TUI is [Nori-CLI](https://github.com/tilework-tech/nori-cli) by tilework-tech. It is a thin ACP client written in Rust, based on Codex. It has a clean interface and is incredibly fast and responsive. It is the best agentic TUI I have used.  
 
 The agent-editable system prompt as a memory technique was originally developed by [Letta](https://www.letta.com/blog/memory-blocks/)  
