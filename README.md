@@ -146,7 +146,8 @@ Note: Most all-in-process agent harnesses support MCP and ACP (some requiring an
 As such, you probably don't want it exposed to your whole LAN, and CERTAINLY not to the internet broadly.  
 I have added host header validation to block DNS rebinding attacks, and origin header validation to block CSRF. To the best of my ability, I believe that when configured with the server container bound to a localhost port, the server is only reachable from localhost. However:
 - Any app running on your machine that can hit localhost can hit the server with full access
-- I am not a cybersecurity expert  
+- I am not a cybersecurity expert   
+ 
 In the future, I intend to add some sort of auth such that you can safely expose the server to your LAN or possibly even the internet.
 
 **Easily swapping MCP servers w/ permission control is not actually supported yet but is a fairly small change. See Permissions and Configurable MCP Server URLs in the Roadmap.
