@@ -125,13 +125,14 @@ You do not *have* to bring your own UI. I include a management CLI (primarily fo
 You can launch a UI from anywhere* that can reach your server, so where your server is running doesn't also have to be where your UI is running.  
 [Nori-CLI](https://github.com/tilework-tech/nori-cli) communicates over [ACP(Agent Client Protocol)](https://agentclientprotocol.com/get-started/introduction), with a bridge that connects to Agent-Home via HTTP and translates to ACP. I cannot recommend this TUI enough, and there are some considerations outside ACP made specifically for Nori, but you should be able to use any ACP client with Agent-Home and the bridge.
 
-### Agent Work Envs
+### Agent Work Environments
 While Agent-Home agents have some tools which execute on the server directly, such as memory tools, web search, web fetch, etc., tools are primarily provided by MCP servers, and as such most of an agent's toolsets are modular.  
 This includes basic coding tools (Read, Edit, Bash, etc.). The result of this is:
 - Flexibility of what tools you attach to your agents. A toolset does not need to be Pydantic AI native, it just needs to speak MCP.  
 - **Flexibility of agent work environment.** Not only are MCP toolsets modular and easy to swap, but you can also *locate* an MCP server in whatever env you like.  
   This point was the primary driver behind this decision.
 
+### Why Modular?
 Most agent harnesses couple the UI, Agent Loop (core server in my case), and tool execution all together in one process. Prominent examples are Claude Code, Codex, and Opencode. That architecture *is* typically simpler to deploy, but it means when you need to launch one of the components in a particular environment, **you're forced to launch all 3 in said env.**  
 
 My best example of this causing problems is **sandboxing**. 95% of the time, I want my agents **coding tools** executing in a sandbox so I don't have to worry about permissions. With all-in-process, I then have to run *everything* in my sandbox. For stateless agents, this is a bit annoying for the UI (its nice to be able to launch and run UI bare on the host). But for stateful agents, the **Agent Loop** being in the sandbox too is a big problem, because now the agent state must also be in the sandbox. This means that message history, agent memories, and the agent loop process are **not** protected from the agent's actions in the sandbox. Additionally, if you want an agent to work in a different sandbox, or on the host, you must somehow transport/synchronize the state. There is also a lot more friction in general when changing work environments.  
