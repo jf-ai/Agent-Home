@@ -14,6 +14,12 @@ Agent-Home doesn't yet have a user-friendly setup. There is no installer, and ge
 In the meantime: If you would like to try out the platform, please [contact me]<gossferneyhough@gmail.com> and I will happily help you get set up.  
 Otherwise, stay tuned. I hope to have a user-friendly setup in the next few months.  
 
+**WARNING**: Currently, Agent-Home has no auth for the server API, and tools are **not gated by any permissions**. As such, the following **MUST** be true for it to be used safely:
+1. Server container bound to localhost only, as in example docker compose file
+2. Any apps on your machine that can reach localhost are trusted (if this isn't true, you probably have bigger issues though)
+3. Any connected MCP server is running inside a sandbox, or is a server with limited capabilities
+(3) will be addressed soon (see **Roadmap**), but it wasn't an initial priority as I do most of my work w/ agents sandboxed anyway.
+
 ## The Problem
 Most agents are primarily thread (aka "session") based. Threads are often tied to a particular task, amount to the contents of one accumulated context window (or less), and terminate when the task is complete.  
 Different threads typically share a system prompt, project context (e.g. CLAUDE.md), and file based memory (notes about working habits, the code base, etc.).  
@@ -102,6 +108,48 @@ This technique is known as **Deferred Memory Compilation** and has the following
 
 ![System architecture diagram](docs/diagrams/architecture.svg)
 
+Agent-Home's architecture was shaped by the following goals:
+- Given the goal to build agents which are single, persistent, evolving entities, Agent-Home agents should be:  
+    - Easy to reach/steer/observe through whatever interface is most convenient in a particular context  
+    - Able to operate in arbitrary contexts with arbitrary abilities.  
+- Given that I'm the only human on this project so far, and that the core goal is already quite ambitious for a single person, I needed to build as little as possible myself.  
+This led to the modular architecture illustrated above.
+
+### Core Server
+This is where the Pydanitc AI loop runs, message history is loaded and processed, where the memory system runs, etc. The server is intended to be run in its own docker container, and provisions for doing so are made.
+You can run as many servers as you like, but my intent is that you run a single server with however many agents you like running on it.
+
+### User Interfaces
+Interfaces reach the server through a REST API and, as long as the requests are valid, the server doesn't care about the details of the user interface. As such, the UI is modular: you can run any valid UI you like, from any context that can reach the server via HTTP*.  
+You do not *have* to bring your own UI. I include a management CLI (primarily for agent CRUD), and highly recommend [Nori-CLI](https://github.com/tilework-tech/nori-cli) as a TUI for working with your Agent-Home agents. These two UIs are all you really need to use Agent-Home.  
+You can launch a UI from anywhere* that can reach your server, so where your server is running doesn't also have to be where your UI is running.  
+[Nori-CLI](https://github.com/tilework-tech/nori-cli) communicates over [ACP(Agent Client Protocol)](https://agentclientprotocol.com/get-started/introduction), with a bridge that connects to Agent-Home via HTTP and translates to ACP. I cannot recommend this TUI enough, and there are some considerations outside ACP made specifically for Nori, but you should be able to use any ACP client with Agent-Home and the bridge.
+
+### Agent Work Envs
+While Agent-Home agents have some tools which execute on the server directly, such as memory tools, web search, web fetch, etc., tools are primarily provided by MCP servers, and as such most of an agent's toolsets are modular.  
+This includes basic coding tools (Read, Edit, Bash, etc.). The result of this is:
+- Flexibility of what tools you attach to your agents. A toolset does not need to be Pydantic AI native, it just needs to speak MCP.  
+- **Flexibility of agent work environment.** Not only are MCP toolsets modular and easy to swap, but you can also *locate* an MCP server in whatever env you like.  
+The second point was my main intent with this decision.
+
+Most agent harnesses couple the UI, Agent Loop (core server in my case), and tool execution all together in one process. Prominent examples are Claude Code, Codex, and Opencode. That architecture *is* typically simpler to deploy, but it means when you need to launch one of the components in a particular environment, **you're forced to launch all 3 in said env.**  
+My best example of this causing problems is **sandboxing**. 95% of the time, I want my agents **coding tools** executing in a sandbox so I don't have to worry about permissions. With all-in-process, I then have to run *everything* in my sandbox. For stateless agents, this is a bit annoying for the UI (its nice to be able to launch and run UI bare on the host). But for stateful agents, the **Agent Loop** being in the sandbox too is a big problem, because now the agent state must also be in the sandbox. This means that message history, agent memories, and the agent loop process are **not** protected from the agent's actions in the sandbox. Additionally, if you want an agent to work in a different sandbox, or on the host, you must somehow transport/synchronize the state. There is also a lot more friction in general when changing work environments.  
+With Agent-Home's modular architecture, I can launch the server in a dedicated & isolated server container, launch the TUI directly from a host terminal window, start a sandbox container w/ an MCP server running inside it, and start work with the server safe from agent actions.  
+If I quickly need an agent to take some privaledged action on the host, I can simply swap** the agent to an MCP server running on the host. Same TUI window, same server, no transporting agent state.  
+
+Note: Most all-in-process agent harnesses support MCP and ACP (some requiring an adapter for ACP), and therefore *could* be used as described above. However, they're not really *intended* to be used like that, may end up missing functionality, may be running an unnecessary UI, will have duplicate unnecessary coding tools in the agent's context, and generally have a lot of unnecessary code running***.
+
+*Right now, the server is intended to be bound to **localhost only**. This is not a fundamental limitation, I just haven't configured network auth yet. If a request reaches the server with allowed host & origin headers, it will be accepted.  
+As such, you probably don't want it exposed to your whole LAN, and CERTAINLY not to the internet broadly.  
+I have added host header validation to block DNS rebinding attacks, and origin header validation to block CSRF. To the best of my ability, I believe that when configured with the server container bound to a localhost port, the server is only reachable from localhost. However:
+- Any app running on your machine that can hit localhost can hit the server with full access
+- I am not a cybersecurity expert
+In the future, I intend to add some sort of auth such that you can safely expose the server to your LAN or possibly even the internet.
+
+**Easily swapping MCP servers w/ permission control is not actually supported yet but is a fairly small change. See Permissions and Configurable MCP Server URLs in the Roadmap.
+
+***This point is somewhat undercut by the fact that Agent-Home's canonical MCP server for coding tools is...Claude Code...in its entirety, running in `serve` mode...BUT, because the MCP tools are modular, its an easy swap in the future, and I hope to find a lightweight MCP server offering up CC style coding tools (they have my preferred syntax and behavior). 
+
 ## Other Features
 
 ### Full-Fidelity Context Reconstruction
@@ -141,6 +189,9 @@ This is effectively Agent-Home's equivalent feature to subagents. Rather than di
 Agent-Home currently compacts context on a fixed threshold. But the right compaction behavior can depend on what the agent is doing, and a single threshold can't adapt to that.  
 **Agentic Compaction** is a planned feature intended to improve the compaction system's responsiveness to current conditions. It is one of the planned features I am most excited about.
 Targeting Q1 2027 for completion.  
+
+### Permissions and Configurable MCP Server URLs
+[TODO]
 
 ### Ease of Setup
 There is currently no installer script for Agent-Home, and the setup is not very user friendly. At the moment, it would not be easy for anyone other than me to deploy it as intended.  
